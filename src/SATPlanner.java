@@ -115,10 +115,10 @@ public class SATPlanner extends AbstractPlanner {
         // we are done. Working now on the IProblem interface
         IProblem problem = solver;
         if (problem.isSatisfiable()) {
-        ....
+        .... //we transform and return the plan
         } else {
-        ...
-        }
+        ... //No plan can be found
+            }
         }
     }
 
