@@ -1,0 +1,89 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Translate PDDL",
+			"group": "build",
+			"type": "shell",
+			"command": "java",
+			"args": [
+				"-jar",
+				"../planner/lib/sokobanParser.jar",
+				"-t",
+				"${input:TXT}",					// TXT File
+			],
+			// "dependsOn": [
+			// 	"Create Jar"
+			// ],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"label": "Create PDDL",
+			"group": "build",
+			"type": "process",
+			"command": "java",
+			"args": [
+				"-jar",
+				"../planner/lib/sokobanParser.jar",
+				"-i", "${input:JSON}",			// JSon File
+				"-o", "${input:PDDL}",			// PDDL folder
+			],
+			// "dependsOn": [
+			// 	"Create Jar"
+			// ],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"label": "Create Jar",
+			"group": "build",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"package",
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			},
+		}
+	],
+	"inputs": [
+		{
+			"id": "JSON",
+			"description": "The JSON Configuration file",
+			"default": "./src/test/resources/json/test1.json",
+			"type": "promptString"
+		},
+		{
+			"id": "PDDL",
+			"description": "The folder where to save the PDDL file",
+			"default": ".",
+			"type": "promptString"
+		},
+		{
+			"id": "TXT",
+			"description": "The TXT file of the output of a PDDL plan",
+			"default": "./src/test/resources/translate/out.txt",
+			"type": "promptString"
+		},
+	]
+}

@@ -1,0 +1,49 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "SokobanParser",
+            "request": "launch",
+            "mainClass": "fr.uga.pddl4j.sokoban.SokobanParser",
+            "projectName": "parser",
+            "args": "${input:args}"
+        },
+        {
+            "type": "java",
+            "name": "testSokobanParser",
+            "request": "launch",
+            "mainClass": "fr.uga.pddl4j.sokoban.SokobanParser",
+            "projectName": "parser",
+            "args": "${input:testingArgs}"
+        }
+    ],
+    "inputs": [
+        {
+            "id":"args",
+            "description": "arguments for SokobanParser",
+            "default": "-i ./src/test/resources/json/test1.json",
+            "type": "promptString",
+        },
+        {
+            "id":"testingArgs",
+            "description": "arguments for SokobanParser",
+            "default": "-i ./src/test/resources/json/test1.json",
+            "type": "pickString",
+            "options": [
+                "-i ./src/test/resources/json/test1.json",
+                "-i ./src/test/resources/json/test1.json -o ./src/test/resources",
+                "-t ./src/test/resources/translate/out.txt"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+
+parsing domain file "domainSokoban.pddl" done successfully
+parsing problem file "p01.pddl" done successfully
+# WARNING: Unable to get Instrumentation. Dynamic Attach failed. You may add this JAR as -javaagent manually, or supply -Djdk.attach.allowAttachSelf
+# WARNING: Unable to attach Serviceability Agent. You can try again with escalated privileges. Two options: a) use -Djol.tryWithSudo=true to try with sudo; b) echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+
+problem instantiation done successfully (14 actions, 28 fluents)
+
+* Starting ENFORCED_HILL_CLIMBING search with FAST_FORWARD heuristic 
+* ENFORCED_HILL_CLIMBING search succeeded
+
+found plan as follows:
+
+0: (       move f1 f2 r) [0]
+1: (       move f2 f3 r) [0]
+2: (push f3 f4 dest b r) [0]
+
+time spent:       0.02 seconds parsing 
+                  0.03 seconds encoding 
+                  0.01 seconds searching
+                  0.06 seconds total time
+
+memory used:      0.13 MBytes for problem representation
+                  0.00 MBytes for searching
+                  0.13 MBytes total
+
+
