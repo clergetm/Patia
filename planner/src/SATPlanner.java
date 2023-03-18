@@ -29,6 +29,7 @@ import java.lang.reflect.Array;
 //For the SATEncoding 
 import java.util.ArrayList;
 
+import org.sat4j.core.VecInt;
 import org.sat4j.maxsat.SolverFactory;
 import org.sat4j.specs.ISolver;
 
