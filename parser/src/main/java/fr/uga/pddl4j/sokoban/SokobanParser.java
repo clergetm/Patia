@@ -103,12 +103,12 @@ public class SokobanParser {
     private boolean initialize(String jsonFilePath, String pddlFilePath) {
         File pddlFile;
         File jsonFile;
-
+        final String format = ".json";
         boolean initialized = false;
         try {
             /* Check JsonFile */
             jsonFile = new File(jsonFilePath);
-            if (!jsonFile.getName().endsWith(".json")) {
+            if (!jsonFile.getName().endsWith(format)) {
                 throw new FileFormatException("Wrong Format");
             }
 
@@ -122,7 +122,7 @@ public class SokobanParser {
             this.boxes = new ArrayList<>();
 
             /* Get json data */
-            mapName = jsonFile.getName();
+            mapName = jsonFile.getName().replace(format,"");
             mapModel = json.get("testIn").toString();
 
             /* Set writer of PDDL problem */
