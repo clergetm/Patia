@@ -1,0 +1,11 @@
+/bin/
+/target/
+/.project
+/.classpath
+/.idea/
+# /.vscode/
+/test_files/
+/pddl4S/personals/
+# pddl4j-4.0.0.jar
+pddl4S/out.pddl
+pddl4S/out.txt
