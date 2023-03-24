@@ -2,5 +2,6 @@
     "files.exclude": {
         "LICENSE": true,
         "pddl4j-4.0.0.jar": true,
-    }
+    },
+    "cmake.configureOnOpen": false
 }

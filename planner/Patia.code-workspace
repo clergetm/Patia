@@ -5,7 +5,12 @@
 		},
 		{
 			"path": "../parser"
+		},
+		{
+			"path": "../sokoban"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
 }

@@ -35,9 +35,9 @@
 				"-i", "${input:JSON}",			// JSon File
 				"-o", "${input:PDDL}",			// PDDL folder
 			],
-			// "dependsOn": [
-			// 	"Create Jar"
-			// ],
+			"dependsOn": [
+				"Create Jar"
+			],
 			"presentation": {
 				"echo": true,
 				"reveal": "always",
@@ -77,13 +77,20 @@
 			"id": "PDDL",
 			"description": "The folder where to save the PDDL file",
 			"default": ".",
-			"type": "promptString"
+			"type": "pickString",
+			"options": [
+				".",
+				"../sokoban/pddl4S"
+			]
 		},
 		{
 			"id": "TXT",
 			"description": "The TXT file of the output of a PDDL plan",
-			"default": "./src/test/resources/translate/out.txt",
-			"type": "promptString"
+			"type": "pickString",
+			"options": [
+				"./src/test/resources/translate/out.txt",
+				"../sokoban/pddl4S/out.txt"
+			]
 		},
 	]
 }
