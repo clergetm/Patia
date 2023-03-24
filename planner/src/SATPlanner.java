@@ -16,6 +16,8 @@ import fr.uga.pddl4j.problem.Problem;
 import fr.uga.pddl4j.problem.State;
 import fr.uga.pddl4j.problem.operator.Action;
 import fr.uga.pddl4j.problem.operator.ConditionalEffect;
+import fr.uga.pddl4j.util.BitVector;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -81,6 +83,24 @@ public class SATPlanner extends AbstractPlanner {
     public Problem instantiate(DefaultParsedProblem problem) {
         final Problem pb = new DefaultProblem(problem);
         pb.instantiate(); //here we instantiate our problem (we ground it).
+        
+        for (Action a : pb.getActions()) {
+            System.out.println("===============================================");
+            System.out.println("Arité: " + a.arity());
+            System.out.println("Parametre lenght: "+ a.getParameters().length);
+            System.out.println("Nom: " + a.getName());
+            BitVector cond = a.getPrecondition().getPositiveFluents();
+            for (Action b : pb.getActions()) {
+                for (ConditionalEffect ce : b.getConditionalEffects()) {
+                    if (ce.getCondition().getPositiveFluents().equals(cond)) {
+                        System.out.println("Super ça fonctionne enfin!");
+                        System.out.println(b.getName());
+                    }
+                }
+            }
+            System.out.println("Precondition" + a.getPrecondition().getNegativeFluents());
+            
+        }
         return pb;
     }
 
