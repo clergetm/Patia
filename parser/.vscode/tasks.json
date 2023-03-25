@@ -2,7 +2,82 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Translate PDDL",
+			"label":"Complete build",
+			"group": "build",
+			"type": "shell",
+			"dependsOn":[
+				"Create Jar",
+				"Create PDDL File",
+				"Planner PDDL",
+				"Translate txt output"
+			],
+			"dependsOrder": "sequence",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": true
+			},
+		},
+		{
+			"label": "Create Jar",
+			"group": "build",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"package",
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			},
+		},
+		{
+			"label": "Create PDDL File",
+			"group": "build",
+			"type": "process",
+			"command": "java",
+			"args": [
+				"-jar",
+				"../planner/lib/sokobanParser.jar",
+				"-i", "../sokoban/config/${input:JSON}",			// JSon File
+				"-o", "${input:PDDL}",			// PDDL folder
+			],
+			// "dependsOn": [
+			// 	"Create Jar"
+			// ],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"label": "Planner PDDL",
+			"group": "none",
+			"type": "shell",
+			"command": "java",
+			"args": [
+			"-cp", 
+			"../planner/lib/pddl4j-4.0.0.jar",			// pddl4j jar
+			"fr.uga.pddl4j.planners.statespace.${input:planner}",		// Planner
+			"../sokoban/pddl4S/domainSokoban.pddl",		// Domain
+			"../sokoban/pddl4S/out.pddl",				// Problem
+			">", "../sokoban/pddl4S/out.txt",			// Out
+			]
+		},
+		{
+			"label": "Translate txt output",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
@@ -24,59 +99,19 @@
 				"clear": true
 			}
 		},
-		{
-			"label": "Create PDDL",
-			"group": "build",
-			"type": "process",
-			"command": "java",
-			"args": [
-				"-jar",
-				"../planner/lib/sokobanParser.jar",
-				"-i", "${input:JSON}",			// JSon File
-				"-o", "${input:PDDL}",			// PDDL folder
-			],
-			"dependsOn": [
-				"Create Jar"
-			],
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": true,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": true
-			}
-		},
-		{
-			"label": "Create Jar",
-			"group": "build",
-			"type": "shell",
-			"command": "mvn",
-			"args": [
-				"clean",
-				"package",
-			],
-			"presentation": {
-				"echo": false,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": true
-			},
-		}
+
 	],
 	"inputs": [
 		{
 			"id": "JSON",
 			"description": "The JSON Configuration file",
-			"default": "./src/test/resources/json/test1.json",
-			"type": "promptString"
+			"default": "test1.json",
+			"type": "promptString",
 		},
 		{
 			"id": "PDDL",
 			"description": "The folder where to save the PDDL file",
-			"default": ".",
+			"default": "../sokoban/pddl4S",
 			"type": "pickString",
 			"options": [
 				".",
@@ -86,11 +121,23 @@
 		{
 			"id": "TXT",
 			"description": "The TXT file of the output of a PDDL plan",
+			"default": "../sokoban/pddl4S/out.txt",
 			"type": "pickString",
 			"options": [
 				"./src/test/resources/translate/out.txt",
 				"../sokoban/pddl4S/out.txt"
 			]
 		},
+		{
+            "id": "planner",
+            "description": "planner name:",
+            "default": "FF",
+            "type": "pickString",
+			"options": [
+				"FF",
+				"GSP",
+				"HSP",
+			]
+        },
 	]
 }
