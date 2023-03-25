@@ -127,7 +127,7 @@ public class SokobanParser {
             mapModel = json.get("testIn").toString();
 
             /* Set writer of PDDL problem */
-            this.writer = new FileWriter(pddlFile, true);
+            this.writer = new FileWriter(pddlFile, false);
 
             initialized = true;
         } catch (Exception e) {
