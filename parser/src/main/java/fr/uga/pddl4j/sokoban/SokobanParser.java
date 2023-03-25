@@ -2,6 +2,7 @@ package fr.uga.pddl4j.sokoban;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.NoSuchElementException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -365,7 +366,7 @@ public class SokobanParser {
                     line = reader.nextLine();
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NoSuchElementException e) {
             e.printStackTrace();
         }
 
