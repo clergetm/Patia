@@ -1,3 +1,7 @@
 {
+    "files.exclude": {
+        "target/": true,
+        
+    },
     "java.configuration.updateBuildConfiguration": "automatic"
 }

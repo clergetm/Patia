@@ -12,5 +12,7 @@
         "test_files": true,
         "pom.xml": false,
         "pddl4j-4.0.0.jar": true,
+        ".classpath":true,
+        ".project":true,
     }
 }
