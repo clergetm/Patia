@@ -15,6 +15,7 @@ import java.util.Arrays;
 import org.json.simple.parser.JSONParser;
 
 import fr.uga.pddl4j.sokoban.exceptions.FileFormatException;
+import fr.uga.pddl4j.sokoban.exceptions.MissingSokobanObjectException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -49,6 +50,8 @@ public class SokobanParser {
     private String mapName;
     private String mapModel;
 
+    private int boxNumber = 1;
+
     /* PDDL Domain related */
     private List<String> floorPlan;
     private List<String> goal;
@@ -57,6 +60,20 @@ public class SokobanParser {
 
     /* Read & Write */
     private FileWriter writer;
+
+    /* Sokoban Character */
+    static final char FLOOR = ' ';
+    static final char GUARD = '@';
+    static final char GUARD_ON_STORAGE = '+';
+    static final char BOX = '$';
+    static final char BOX_ON_STORAGE = '*';
+    static final char DESTINATION = '.';
+    static final char WALL = '#';
+
+    static final char PREFIX_FLOOR = 'f';
+    static final char PREFIX_DESTINATION = 'f';
+    static final char PREFIX_BOX = 'b';
+    static final char PREFIX_GUARD = 'g';
 
     /**
      * Constructor of JsonToPDDL.
@@ -123,7 +140,7 @@ public class SokobanParser {
             this.boxes = new ArrayList<>();
 
             /* Get json data */
-            mapName = jsonFile.getName().replace(format,"");
+            mapName = jsonFile.getName().replace(format, "");
             mapModel = json.get("testIn").toString();
 
             /* Set writer of PDDL problem */
@@ -155,15 +172,17 @@ public class SokobanParser {
      * 
      * @throws IOException append exception.
      * @author YazidC
+     * @throws MissingSokobanObjectException
      */
-    public void createObjects() throws IOException {
+    public void createObjects() throws IOException, MissingSokobanObjectException {
 
         ArrayList<String> map = new ArrayList<>(Arrays.asList(mapModel.split("\n")));
-
-        boolean betweenWalls = true;
+        
+        for (String s : map) {
+            System.out.println(s);
+        }
         int row = 1;
         int cell = 1;
-        int boxNumber = 1;
 
         final String strFloor = " - floor\n";
         final String strDest = " - destination\n";
@@ -172,64 +191,51 @@ public class SokobanParser {
         char[] arrayMap = new char[mapModel.length()];
         mapModel.getChars(0, mapModel.length(), arrayMap, 0);
         for (int i = 0; i < map.size(); i++) {
+            boolean betweenWalls = false;
             row++;
             cell = 1;
             for (int j = 0; j < map.get(i).length(); j++) {
-
+                if (map.get(i).charAt(j) == '#')
+                    betweenWalls = true;
                 if (betweenWalls) {
                     switch (map.get(i).charAt(j)) {
                         case ' ':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
-                            cell++;
+                            addFloor(row, cell);
                             break;
                         case '.':
-                            writer.append(cfloor + row + cell + strDest);
-                            floorPlan.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            cell++;
+                            addDestination(row, cell);
                             break;
                         case '@':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
+                            addFloor(row, cell);
                             guardPosition = cfloor + row + cell;
-                            cell++;
                             break;
                         case '+':
-                            writer.append(cfloor + row + cell + strDest);
+                            addDestination(row, cell);
                             guardPosition = cfloor + row + cell;
-                            floorPlan.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            cell++;
                             break;
                         case '$':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
-                            writer.append("b" + boxNumber + strBox);
-                            boxes.add(cfloor + row + cell);
-                            boxNumber++;
-                            cell++;
+                            addFloor(row, cell);
+                            addBox(row, cell);
                             break;
                         case '*':
-                            writer.append(cfloor + row + cell + strDest);
-                            floorPlan.add(cfloor + row + cell);
-                            writer.append("b" + boxNumber + strBox);
-                            boxes.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            boxNumber++;
-                            cell++;
+                            addDestination(row, cell);
+                            addBox(row, cell);
                             break;
                         case '#':
-                            cell++;
                             break;
                         default:
-                            break;
+                            throw new MissingSokobanObjectException("Invalid character read.");
                     }
                 }
+                cell++;
             }
-
         }
-        writer.append(")\n");
+        // Check missing object
+        if (guardPosition.isEmpty()) {
+            throw new MissingSokobanObjectException("The guard position is missing");
+        } else {
+            writer.append(")\n");
+        }
     }
 
     /**
@@ -245,27 +251,25 @@ public class SokobanParser {
         for (int i = 0; i < floorPlan.size(); i++) {
             cell = floorPlan.get(i);
             if (boxes.contains(cell)) {
-                writer.append("(on b" + boxes.size() + " " + cell + ")\n(withbox " + cell + ")\n");
-                boxes.remove(cell);
+                writer.append("(on b" + --boxNumber + " " + cell + ")\n(withbox " + cell + ")\n");
             }
-            if (!boxes.contains(cell) && !goal.contains(cell) && !guardPosition.equals(cell))
+            if (!boxes.contains(cell) && !guardPosition.equals(cell))
                 writer.append("(empty " + cell + ")\n");
             if (guardPosition.equals(cell))
                 writer.append("(on g " + cell + ")\n");
-            int right = Integer.parseInt(cell.substring(1));
-            int down = right + 10;
+            int right = Integer.parseInt(cell.substring(2));
+            int down = Integer.parseInt(cell.substring(1, 2)) + 1;
             right++;
-            toCompare = "f" + right;
+            toCompare = cell.substring(0,2) + right;
             if (floorPlan.contains(toCompare)) {
                 this.writeToPath(cell, toCompare, 'r');
                 this.writeToPath(toCompare, cell, 'l');
             }
-            toCompare = "f" + down;
+            toCompare = "f" + down + (right - 1);
             if (floorPlan.contains(toCompare)) {
                 this.writeToPath(cell, toCompare, 'd');
                 this.writeToPath(toCompare, cell, 'u');
             }
-
         }
         writer.append(")\n");
     }
@@ -324,6 +328,23 @@ public class SokobanParser {
         this.writer.append("(path " + from + " " + to + " " + direction + ")\n");
     }
 
+    private void addFloor(int row, int cell) throws IOException {
+        this.writer.append(""+PREFIX_FLOOR + row + cell + " - floor\n");
+        this.floorPlan.add(""+ PREFIX_FLOOR + row + cell);
+    }
+
+    private void addDestination(int row, int cell) throws IOException {
+        this.writer.append(""+PREFIX_DESTINATION + row + cell + " - destination\n");
+        this.floorPlan.add(""+ PREFIX_DESTINATION + row + cell);
+        this.goal.add("" + PREFIX_DESTINATION + row + cell);      
+    }
+
+    private void addBox(int row, int cell) throws IOException {
+        writer.append("" + PREFIX_BOX + boxNumber + " - box\n");
+        boxes.add("" + PREFIX_FLOOR + row + cell);
+        boxNumber++;
+    }
+    
     /**
      * Translate a PDDL plan
      * <p>
