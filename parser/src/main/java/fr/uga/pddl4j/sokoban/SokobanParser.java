@@ -177,51 +177,46 @@ public class SokobanParser {
     public void createObjects() throws IOException, MissingSokobanObjectException {
 
         ArrayList<String> map = new ArrayList<>(Arrays.asList(mapModel.split("\n")));
-        
+
         for (String s : map) {
             System.out.println(s);
         }
         int row = 1;
         int cell = 1;
 
-        final String strFloor = " - floor\n";
-        final String strDest = " - destination\n";
-        final String strBox = " - box\n";
-        final String cfloor = "f";
         char[] arrayMap = new char[mapModel.length()];
         mapModel.getChars(0, mapModel.length(), arrayMap, 0);
         for (int i = 0; i < map.size(); i++) {
             boolean betweenWalls = false;
-            row++;
             cell = 1;
             for (int j = 0; j < map.get(i).length(); j++) {
-                if (map.get(i).charAt(j) == '#')
+                if (map.get(i).charAt(j) == WALL)
                     betweenWalls = true;
                 if (betweenWalls) {
                     switch (map.get(i).charAt(j)) {
-                        case ' ':
+                        case WALL:
+                            break;
+                        case FLOOR:
                             addFloor(row, cell);
                             break;
-                        case '.':
+                        case DESTINATION:
                             addDestination(row, cell);
                             break;
-                        case '@':
+                        case GUARD:
                             addFloor(row, cell);
-                            guardPosition = cfloor + row + cell;
+                            changeGuardPosition(row, cell);
                             break;
-                        case '+':
+                        case GUARD_ON_STORAGE:
                             addDestination(row, cell);
-                            guardPosition = cfloor + row + cell;
+                            changeGuardPosition(row, cell);
                             break;
-                        case '$':
+                        case BOX:
                             addFloor(row, cell);
                             addBox(row, cell);
                             break;
-                        case '*':
+                        case BOX_ON_STORAGE:
                             addDestination(row, cell);
                             addBox(row, cell);
-                            break;
-                        case '#':
                             break;
                         default:
                             throw new MissingSokobanObjectException("Invalid character read.");
@@ -229,6 +224,7 @@ public class SokobanParser {
                 }
                 cell++;
             }
+            row++;
         }
         // Check missing object
         if (guardPosition.isEmpty()) {
@@ -260,7 +256,7 @@ public class SokobanParser {
             int right = Integer.parseInt(cell.substring(2));
             int down = Integer.parseInt(cell.substring(1, 2)) + 1;
             right++;
-            toCompare = cell.substring(0,2) + right;
+            toCompare = cell.substring(0, 2) + right;
             if (floorPlan.contains(toCompare)) {
                 this.writeToPath(cell, toCompare, 'r');
                 this.writeToPath(toCompare, cell, 'l');
@@ -328,23 +324,54 @@ public class SokobanParser {
         this.writer.append("(path " + from + " " + to + " " + direction + ")\n");
     }
 
+    /**
+     * Append in the write the floor. And add to floorplan list.
+     * @param row       x axis.
+     * @param cell      y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
     private void addFloor(int row, int cell) throws IOException {
-        this.writer.append(""+PREFIX_FLOOR + row + cell + " - floor\n");
-        this.floorPlan.add(""+ PREFIX_FLOOR + row + cell);
+        this.writer.append("" + PREFIX_FLOOR + row + cell + " - floor\n");
+        this.floorPlan.add("" + PREFIX_FLOOR + row + cell);
     }
 
+    /**
+     * Append in the write the destination. And add to floorplan list. And add the goal.
+     * @param row       x axis.
+     * @param cell      y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
     private void addDestination(int row, int cell) throws IOException {
-        this.writer.append(""+PREFIX_DESTINATION + row + cell + " - destination\n");
-        this.floorPlan.add(""+ PREFIX_DESTINATION + row + cell);
-        this.goal.add("" + PREFIX_DESTINATION + row + cell);      
+        this.writer.append("" + PREFIX_DESTINATION + row + cell + " - destination\n");
+        this.floorPlan.add("" + PREFIX_DESTINATION + row + cell);
+        this.goal.add("" + PREFIX_DESTINATION + row + cell);
     }
 
+    /**
+     * Append in the write the box. And add to boxes list.
+     * @param row       x axis.
+     * @param cell      y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
     private void addBox(int row, int cell) throws IOException {
         writer.append("" + PREFIX_BOX + boxNumber + " - box\n");
         boxes.add("" + PREFIX_FLOOR + row + cell);
         boxNumber++;
     }
-    
+
+    /**
+     * change the guard position
+     * @param row       x axis.
+     * @param cell      y axis.
+     * @author MathysC
+     */
+    private void changeGuardPosition(int row, int cell) {
+        this.guardPosition = "f" + row + cell;
+    }
+
     /**
      * Translate a PDDL plan
      * <p>
@@ -399,28 +426,28 @@ public class SokobanParser {
      * 4 Options are available:
      * <table>
      * <thead>
-     *   <tr>
-     *     <th>option</th>
-     *     <th>description</th>
-     *   </tr>
+     * <tr>
+     * <th>option</th>
+     * <th>description</th>
+     * </tr>
      * </thead>
      * <tbody>
-     *   <tr>
-     *     <td>-i</td>
-     *     <td>JSON Configuration file as input</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-o</td>
-     *     <td>Folder where to save the PDDL file</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-t</td>
-     *     <td>PDDL Plan file to translate in Sokoban Format</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-h</td>
-     *     <td>Show Help</td>
-     *   </tr>
+     * <tr>
+     * <td>-i</td>
+     * <td>JSON Configuration file as input</td>
+     * </tr>
+     * <tr>
+     * <td>-o</td>
+     * <td>Folder where to save the PDDL file</td>
+     * </tr>
+     * <tr>
+     * <td>-t</td>
+     * <td>PDDL Plan file to translate in Sokoban Format</td>
+     * </tr>
+     * <tr>
+     * <td>-h</td>
+     * <td>Show Help</td>
+     * </tr>
      * </tbody>
      * </table>
      * 
