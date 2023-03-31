@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../sokoban"
+		},
+		{
+			"path": "../PDDL4J"
 		}
 	],
 	"settings": {
