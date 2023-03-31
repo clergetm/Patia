@@ -47,7 +47,7 @@
 			"args": [
 				"-jar",
 				"../planner/lib/sokobanParser.jar",
-				"-i", "../sokoban/config/${input:JSON}",			// JSon File
+				"-i", "../sokoban/config/${input:JSON}.json",			// JSon File
 				"-o", "${input:PDDL}",			// PDDL folder
 			],
 			// "dependsOn": [
@@ -105,7 +105,7 @@
 		{
 			"id": "JSON",
 			"description": "The JSON Configuration file",
-			"default": "test1.json",
+			"default": "test1",
 			"type": "promptString",
 		},
 		{

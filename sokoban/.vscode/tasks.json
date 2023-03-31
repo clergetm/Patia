@@ -15,16 +15,31 @@
 			]
 		},
 		{
-			"label": "Simple Planner",
+			"label": "FF Planner",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
 			"-cp", 
 			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",	// Planner
+			"fr.uga.pddl4j.planners.statespace.FF",					// Planner
 			"pddl4S/domainSokoban.pddl",							// Domain
 			"pddl4S/${input:problem}.pddl"							// Problem
+			]
+		},
+		{
+			"label": "HSP Planner",
+			"group": "build",
+			"type": "shell",
+			"command": "java",
+			"args": [
+			"-cp", 
+			"pddl4j-4.0.0.jar",										// pddl4j jar
+			"fr.uga.pddl4j.planners.statespace.HSP",				// Planner
+			"pddl4S/domainSokoban.pddl",							// Domain
+			"pddl4S/${input:problem}.pddl",							// Problem
+			"-e", "MAX",
+			"-w", "1.2",
 			]
 		},
 		{
@@ -110,7 +125,7 @@
 		{
             "id": "problem",
             "description": "Problem file name:",
-            "default": "p01",
+            "default": "out",
             "type": "promptString"
         },
 
