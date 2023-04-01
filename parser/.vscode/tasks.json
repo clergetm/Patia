@@ -2,14 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label":"Complete build",
+			"label": "Complete build",
+			"detail": "Create a PDDL, Plan it and Translate it",
 			"group": "build",
 			"type": "shell",
-			"dependsOn":[
-				"Create Jar",
+			"dependsOn": [
 				"Create PDDL File",
 				"Planner PDDL",
-				"Translate txt output"
+				"Run server",
 			],
 			"dependsOrder": "sequence",
 			"presentation": {
@@ -28,7 +28,7 @@
 			"command": "mvn",
 			"args": [
 				"clean",
-				"package",
+				"package"
 			],
 			"presentation": {
 				"echo": false,
@@ -37,22 +37,22 @@
 				"panel": "shared",
 				"showReuseMessage": true,
 				"clear": true
-			},
+			}
 		},
 		{
 			"label": "Create PDDL File",
+			"detail": "Parse the JSON File into PDDL Problem File",
 			"group": "build",
-			"type": "process",
+			"type": "shell",
 			"command": "java",
 			"args": [
 				"-jar",
 				"../planner/lib/sokobanParser.jar",
-				"-i", "../sokoban/config/${input:JSON}.json",			// JSon File
-				"-o", "${input:PDDL}",			// PDDL folder
+				"-i",
+				"../sokoban/config/${input:JSON}.json",
+				"-o",
+				"${input:PDDL}"
 			],
-			// "dependsOn": [
-			// 	"Create Jar"
-			// ],
 			"presentation": {
 				"echo": true,
 				"reveal": "always",
@@ -63,17 +63,24 @@
 			}
 		},
 		{
+			"hide": true,
 			"label": "Planner PDDL",
+			"detail": "Use HSP to found the plan of the PDDL Probleme",
 			"group": "none",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-cp", 
-			"../planner/lib/pddl4j-4.0.0.jar",			// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",		// Planner
-			"../sokoban/pddl4S/domainSokoban.pddl",		// Domain
-			"../sokoban/pddl4S/out.pddl",				// Problem
-			">", "../sokoban/pddl4S/out.txt",			// Out
+				"-cp",
+				"../planner/lib/pddl4j-4.0.0.jar",
+				"fr.uga.pddl4j.planners.statespace.HSP",
+				"../sokoban/pddl4S/domainSokoban.pddl",
+				"../sokoban/pddl4S/out.pddl",
+				"-e",
+				"MAX",
+				"-w",
+				"1.2",
+				">",
+				"../sokoban/pddl4S/out.txt"
 			]
 		},
 		{
@@ -85,11 +92,8 @@
 				"-jar",
 				"../planner/lib/sokobanParser.jar",
 				"-t",
-				"${input:TXT}",					// TXT File
+				"${input:TXT}"
 			],
-			// "dependsOn": [
-			// 	"Create Jar"
-			// ],
 			"presentation": {
 				"echo": true,
 				"reveal": "always",
@@ -99,15 +103,46 @@
 				"clear": true
 			}
 		},
-
+		// RUN SERVER
+		{
+			// "hide": true,
+			"label": "Run server",
+			"group": "none",
+			"type": "shell",
+			"command": "java",
+			"args": [
+				"--add-opens",
+				"java.base/java.lang=ALL-UNNAMED",
+				"-server",
+				"-Xms2048m",
+				"-Xmx2048m",
+				"-cp",
+				"\"$(mvn dependency:build-classpath -Dmdep.outputFile=/dev/stdout -q):target/test-classes/:target/classes\"",
+				"sokoban.SokobanMain",
+				"${input:JSON}.json"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"options": {
+				"cwd": "../sokoban"
+			}
+		},
 	],
 	"inputs": [
+		// Json File
 		{
 			"id": "JSON",
 			"description": "The JSON Configuration file",
 			"default": "test1",
 			"type": "promptString",
 		},
+		// PDDL path
 		{
 			"id": "PDDL",
 			"description": "The folder where to save the PDDL file",
@@ -118,6 +153,7 @@
 				"../sokoban/pddl4S"
 			]
 		},
+		// Text File
 		{
 			"id": "TXT",
 			"description": "The TXT file of the output of a PDDL plan",
@@ -128,16 +164,5 @@
 				"../sokoban/pddl4S/out.txt"
 			]
 		},
-		{
-            "id": "planner",
-            "description": "planner name:",
-            "default": "FF",
-            "type": "pickString",
-			"options": [
-				"FF",
-				"GSP",
-				"HSP",
-			]
-        },
 	]
 }

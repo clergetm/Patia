@@ -1,133 +1,228 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// RUN SERVER
 		{
 			"label": "Run server",
 			"group": "none",
 			"type": "shell",
 			"command": "java",
 			"args": [
-				"--add-opens", "java.base/java.lang=ALL-UNNAMED",
-				"-server", "-Xms2048m", "-Xmx2048m",
-				"-cp" ,
+				"--add-opens",
+				"java.base/java.lang=ALL-UNNAMED",
+				"-server",
+				"-Xms2048m",
+				"-Xmx2048m",
+				"-cp",
 				"\"$(mvn dependency:build-classpath -Dmdep.outputFile=/dev/stdout -q):target/test-classes/:target/classes\"",
-      			"sokoban.SokobanMain"
+				"sokoban.SokobanMain",
+				"${input:json}.json"
 			]
 		},
+		// RUN PLANNER
+		// DEFAULT FF PLANNER
 		{
-			"label": "FF Planner",
+			"label": "Default FF Planner",
+			"detail": "FastForward",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-cp", 
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.FF",					// Planner
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl"							// Problem
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.FF", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl" // Problem
 			]
 		},
+		// CUSTOM FF PLANNER
 		{
-			"label": "HSP Planner",
+			"label": "Custom FF Planner",
+			"detail": "FastForward",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-cp", 
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.HSP",				// Planner
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl",							// Problem
-			"-e", "MAX",
-			"-w", "1.2",
+				"-Xms${input:Xm}", // Initial memory allocation
+				"-Xmx${input:Xm}", // Maximum memory allocation
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.FF", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl", // Problem
+				"--log=${input:logLevel}", // Log Level
+				"--timeout=${input:timeout}", // Timeout
+				"--weight=${input:weight}", // Weight
 			]
 		},
+		// DEFAULT HSP PLANNER
 		{
-			"label": "Planner with args",
+			"label": "Default HSP Planner",
+			"detail": "Heuristic Search Planner",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-Xms${input:Xms}",										// Initial memory allocation
-			"-Xmx${input:Xmx}",										// Maximum memory allocation
-			"-cp", 													// classpath
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",	// Planner
-			"--timeout=${input:timeout}",							// Timeout
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl"							// Problem
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.HSP", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl", // Problem
+				"-e",
+				"MAX",
+				"-w",
+				"1.2",
 			]
 		},
+		// CUSTOM HSP PLANNER
 		{
-			"label": "Planner with args saved",
+			"label": "Custom HSP Planner",
+			"detail": "Heuristic Search Planner",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-Xms${input:Xms}",										// Initial memory allocation
-			"-Xmx${input:Xms}",										// Maximum memory allocation
-			"-cp", 													// classpath
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",	// Planner
-			"--timeout=600",										// Timeout
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl",							// Problem
+				"-Xms${input:Xm}", // Initial memory allocation
+				"-Xmx${input:Xm}", // Maximum memory allocation
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.HSP", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl", // Problem
+				"--heuristic=${input:heuristic}", // Heuristic
+				"--log=${input:logLevel}", // Log Level
+				"--timeout=${input:timeout}", // Timeout
+				"--weight=${input:weight}", // Weight
 			]
 		},
+		// DEFAULT GSP PLANNER
 		{
-			"label": "Planner with plan in out.txt",
+			"label": "Default GSP Planner",
+			"detail": "Heuristic Search Planner",
 			"group": "build",
 			"type": "shell",
 			"command": "java",
 			"args": [
-			"-Xms${input:Xms}",										// Initial memory allocation
-			"-Xmx${input:Xms}",										// Maximum memory allocation
-			"-cp", 													// classpath
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",	// Planner
-			"--timeout=600",										// Timeout
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl",							// Problem
-			">", "pddl4S/out.txt"									// Output File
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.GSP", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl", // Problem
+				"-s",
+				"ENFORCED_HILL_CLIMBING",
+				"-e",
+				"FAST_FORWARD",
+				"-t",
+				"1000",
+			]
+		},
+		// CUSTOM GSP PLANNER
+		{
+			"label": "Custom GSP Planner",
+			"detail": "Heuristic Search Planner",
+			"group": "build",
+			"type": "shell",
+			"command": "java",
+			"args": [
+				"-Xms${input:Xm}", // Initial memory allocation
+				"-Xmx${input:Xm}", // Maximum memory allocation
+				"-cp", // Classpath
+				"pddl4j-4.0.0.jar", // pddl4j jar
+				"fr.uga.pddl4j.planners.statespace.GSP", // Planner
+				"pddl4S/domainSokoban.pddl", // Domain
+				"pddl4S/${input:problem}.pddl", // Problem
+				"--heuristic=${input:heuristic}", // Heuristic
+				"--log=${input:logLevel}", // Log Level
+				"--timeout=${input:timeout}", // Timeout
+				"--weight=${input:weight}", // Weight
+				"--search-strategies=${input:strategy}", // Strategy
 			]
 		},
 	],
 	"inputs": [
+		// Memory Allocation
 		{
-			"id": "Xms",
-            "description": "Initial memory allocation",
-			"default": "512m",
+			"id": "Xm",
+			"description": "Initial and Maximal memory allocation",
+			"default": "1G",
 			"type": "promptString"
 		},
+		// JSON File
 		{
-			"id": "Xmx",
-            "description": "Maximum memory allocation",
-			"default": "512m",
+			"id": "json",
+			"description": "json file to use",
+			"default": "test1",
+			"type": "promptString",
+		},
+		// PDDL Problem File
+		{
+			"id": "problem",
+			"description": "Problem file name:",
+			"default": "out",
 			"type": "promptString"
 		},
+		// Log Level
 		{
-            "id": "planner",
-            "description": "planner name:",
-            "default": "FF",
-            "type": "pickString",
+			"id": "logLevel",
+			"description": "Set the level of trace of the planner",
+			"default": "INFO",
+			"type": "pickString",
 			"options": [
-				"FF",
-				"GSP",
-				"HSP",
+				"ALL",
+				"DEBUG",
+				"INFO",
+				"ERROR",
+				"FATAL",
+				"OFF",
+				"TRACE",
 			]
-        },
+		},
+		// Timeout
 		{
 			"id": "timeout",
-			"description": "set the time out of the planner",
+			"description": "Set the time out of the planner in seconds",
 			"default": "600",
 			"type": "promptString"
 		},
+		// Weight
 		{
-            "id": "problem",
-            "description": "Problem file name:",
-            "default": "out",
-            "type": "promptString"
-        },
-
-    ]
+			"id": "weight",
+			"description": "Set the weight of the heuristic",
+			"default": "1.0",
+			"type": "promptString"
+		},
+		// Heuristic
+		{
+			"id": "heuristic",
+			"description": "Set the heuristic",
+			"default": "FAST_FORWARD",
+			"type": "pickString",
+			"options": [
+				"AJUSTED_SUM",
+				"AJUSTED_SUM2",
+				"AJUSTED_SUM2M",
+				"COMBO",
+				"MAX",
+				"FAST_FORWARD",
+				"SET_LEVEL",
+				"SUM",
+				"SUM_MUTEX",
+			]
+		},
+		// Strategy
+		{
+			"id": "strategy",
+			"description": "Set the search strategies",
+			"default": "ASTAR",
+			"type": "pickString",
+			"options": [
+				"ASTAR",
+				"ENFORCED_HILL_CLIMBING",
+				"BREADTH_FIRST",
+				"GREEDY_BEST_FIRST",
+				"DEPTH_FIRST",
+				"HILL_CLIMBING",
+			]
+		},
+	]
 }

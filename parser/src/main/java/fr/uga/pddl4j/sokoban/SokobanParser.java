@@ -35,7 +35,7 @@ import org.json.simple.JSONObject;
  * </ol>
  * <br>
  * 
- * @author Hugo Alepoig
+ * @author Hugo Apeloig
  * @author Yazid Cheriti
  * @author Mathys Clerget
  * @version 1.0
@@ -47,21 +47,22 @@ public class SokobanParser {
     private String jsonFilePathString;
     private String pddlPathString;
 
+    /* configuration file data */
     private String mapName;
     private String mapModel;
-
-    private int boxNumber = 1;
 
     /* PDDL Domain related */
     private List<String> floorPlan;
     private List<String> goal;
     private List<String> boxes;
     private String guardPosition;
+    private int boxNumber = 1;
 
     /* Read & Write */
     private FileWriter writer;
+    static final String PDDL_FILE_NAME = "out.pddl";
 
-    /* Sokoban Character */
+    /* Sokoban Characters */
     static final char FLOOR = ' ';
     static final char GUARD = '@';
     static final char GUARD_ON_STORAGE = '+';
@@ -69,7 +70,6 @@ public class SokobanParser {
     static final char BOX_ON_STORAGE = '*';
     static final char DESTINATION = '.';
     static final char WALL = '#';
-
     static final char PREFIX_FLOOR = 'f';
     static final char PREFIX_DESTINATION = 'f';
     static final char PREFIX_BOX = 'b';
@@ -85,7 +85,8 @@ public class SokobanParser {
      */
     public SokobanParser(String jsonFilePath, String pddlPath) {
         this.jsonFilePathString = jsonFilePath;
-        this.pddlPathString = pddlPath + "/out.pddl";
+        this.pddlPathString = pddlPath + File.separator + PDDL_FILE_NAME;
+        guardPosition = "";
     }
 
     /**
@@ -170,30 +171,24 @@ public class SokobanParser {
     /**
      * Write the object part of the PDDL Problem.
      * 
-     * @throws IOException append exception.
+     * @throws IOException                   append exception.
+     * @throws MissingSokobanObjectException Something is wrong about the Sokoban
+     *                                       problem, missing or unknown characters.
      * @author YazidC
-     * @throws MissingSokobanObjectException
      */
     public void createObjects() throws IOException, MissingSokobanObjectException {
-
-        ArrayList<String> map = new ArrayList<>(Arrays.asList(mapModel.split("\n")));
-
-        for (String s : map) {
-            System.out.println(s);
-        }
-        int row = 1;
+        // Start with (1,1)
+        int row = 1; 
         int cell = 1;
 
-        char[] arrayMap = new char[mapModel.length()];
-        mapModel.getChars(0, mapModel.length(), arrayMap, 0);
-        for (int i = 0; i < map.size(); i++) {
+        for (String line : mapModel.split("\n")) {
             boolean betweenWalls = false;
-            cell = 1;
-            for (int j = 0; j < map.get(i).length(); j++) {
-                if (map.get(i).charAt(j) == WALL)
+            for (char c : line.toCharArray()) {
+                // We won't start writing the plan for this line until we've read the first wall character, to avoid writing unnecessary floors.
+                if (c == WALL && !betweenWalls)
                     betweenWalls = true;
-                if (betweenWalls) {
-                    switch (map.get(i).charAt(j)) {
+                else if (betweenWalls) {
+                    switch (c) {
                         case WALL:
                             break;
                         case FLOOR:
@@ -222,13 +217,21 @@ public class SokobanParser {
                             throw new MissingSokobanObjectException("Invalid character read.");
                     }
                 }
-                cell++;
+                cell++; // Next cell
             }
-            row++;
+            row++; //  Next row
+            cell = 1;
+
         }
-        // Check missing object
+        // Check missing objects
         if (guardPosition.isEmpty()) {
-            throw new MissingSokobanObjectException("The guard position is missing");
+            throw new MissingSokobanObjectException("The guard position is missing.");
+        } else if (this.boxes.size() < this.goal.size()) {
+            throw new MissingSokobanObjectException("There are fewer boxes that destinations.");
+        } else if (this.boxes.isEmpty()) {
+            throw new MissingSokobanObjectException("You need at least one box.");
+        } else if (this.goal.isEmpty()) {
+            throw new MissingSokobanObjectException("You need at least one destination.");
         } else {
             writer.append(")\n");
         }
@@ -258,13 +261,13 @@ public class SokobanParser {
             right++;
             toCompare = cell.substring(0, 2) + right;
             if (floorPlan.contains(toCompare)) {
-                this.writeToPath(cell, toCompare, 'r');
-                this.writeToPath(toCompare, cell, 'l');
+                this.writePath(cell, toCompare, 'r');
+                this.writePath(toCompare, cell, 'l');
             }
             toCompare = "f" + down + (right - 1);
             if (floorPlan.contains(toCompare)) {
-                this.writeToPath(cell, toCompare, 'd');
-                this.writeToPath(toCompare, cell, 'u');
+                this.writePath(cell, toCompare, 'd');
+                this.writePath(toCompare, cell, 'u');
             }
         }
         writer.append(")\n");
@@ -320,14 +323,15 @@ public class SokobanParser {
      * @throws IOException append exception.
      * @author MathysC
      */
-    private void writeToPath(String from, String to, char direction) throws IOException {
+    private void writePath(String from, String to, char direction) throws IOException {
         this.writer.append("(path " + from + " " + to + " " + direction + ")\n");
     }
 
     /**
      * Append in the write the floor. And add to floorplan list.
-     * @param row       x axis.
-     * @param cell      y axis.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
      * @throws IOException append exception.
      * @author MathysC
      */
@@ -337,9 +341,11 @@ public class SokobanParser {
     }
 
     /**
-     * Append in the write the destination. And add to floorplan list. And add the goal.
-     * @param row       x axis.
-     * @param cell      y axis.
+     * Append in the write the destination. And add to floorplan list. And add the
+     * goal.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
      * @throws IOException append exception.
      * @author MathysC
      */
@@ -351,8 +357,9 @@ public class SokobanParser {
 
     /**
      * Append in the write the box. And add to boxes list.
-     * @param row       x axis.
-     * @param cell      y axis.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
      * @throws IOException append exception.
      * @author MathysC
      */
@@ -364,8 +371,9 @@ public class SokobanParser {
 
     /**
      * change the guard position
-     * @param row       x axis.
-     * @param cell      y axis.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
      * @author MathysC
      */
     private void changeGuardPosition(int row, int cell) {
@@ -465,22 +473,22 @@ public class SokobanParser {
         String helpOpt = "h";
         Options options = new Options();
         Option cInput = Option.builder(inputOpt).argName("json").hasArg().desc("JSON configuration file").build();
-        Option cOutput = Option.builder(outputOpt).argName("path").hasArg().desc("folder where to save PDDL file")
+        Option cOutput = Option.builder(outputOpt).argName("path").hasArg().desc("Folder where to save PDDL file")
                 .build();
-        Option tInput = Option.builder(translateOpt).argName("toTranslate").hasArg().desc("PDDL Plan to translate")
+        Option tInput = Option.builder(translateOpt).argName("txt").hasArg().desc("PDDL Plan to translate")
                 .build();
 
         options.addOption(cInput);
         options.addOption(cOutput);
         options.addOption(tInput);
-        options.addOption(helpOpt, "show Help");
+        options.addOption(helpOpt, "Show this help menu");
         CommandLineParser commandParser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 
         try {
 
             CommandLine cmd = commandParser.parse(options, args);
-            // Create options
+            // Create PDDL file
             if (cmd.hasOption(inputOpt)) {
                 // With output given
                 if (cmd.hasOption(outputOpt)) {
