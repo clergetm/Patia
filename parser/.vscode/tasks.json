@@ -105,7 +105,7 @@
 		},
 		// RUN SERVER
 		{
-			// "hide": true,
+			"hide": true,
 			"label": "Run server",
 			"group": "none",
 			"type": "shell",
