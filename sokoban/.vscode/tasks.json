@@ -1,6 +1,54 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// CONFIGURE
+		{
+			"label": "Maven configuration",
+			"detail": "install jar in local Maven repo",
+			"type": "shell",
+			"group": "build",
+			"dependsOn": [
+				"PDDL JAR",
+				"SOKOBAN JAR"
+			],
+			"dependsOrder": "sequence",
+		},
+		// PDDL JAR
+		{
+			"hide": true,
+			"label": "PDDL JAR",
+			"detail": "install PDDL Jar in local Maven Repo",
+			"type": "shell",
+			"group": "none",
+			"command": "mvn",
+			"args": [
+				"install:install-file",
+				"-Dfile=../planner/lib/pddl4j-4.0.0.jar",
+				"-DgroupId=fr.uga",
+				"-DartifactId=pddl4j",
+				"-Dversion=4.0.0",
+				"-Dpackaging=jar",
+				"-DgeneratePom=true",
+			],
+		},
+		// SOKOBAN JAR
+		{
+			"hide": true,
+			"label": "SOKOBAN JAR",
+			"detail": "install SOKOBAN Jar in local Maven Repo",
+			"type": "shell",
+			"group": "none",
+			"command": "mvn",
+			"args": [
+				"install:install-file",
+				"-Dfile=../planner/lib/sokobanParser.jar",
+				"-DgroupId=fr.uga.pddl4j.sokoban",
+				"-DartifactId=parser",
+				"-Dversion=1.0",
+				"-Dpackaging=jar",
+				"-DgeneratePom=true",
+			],
+		},
 		// RUN SERVER
 		{
 			"label": "Run server",
@@ -32,7 +80,9 @@
 				"pddl4j-4.0.0.jar", // pddl4j jar
 				"fr.uga.pddl4j.planners.statespace.FF", // Planner
 				"pddl4S/domainSokoban.pddl", // Domain
-				"pddl4S/${input:problem}.pddl" // Problem
+				"pddl4S/${input:problem}.pddl", // Problem
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 		// CUSTOM FF PLANNER
@@ -53,6 +103,8 @@
 				"--log=${input:logLevel}", // Log Level
 				"--timeout=${input:timeout}", // Timeout
 				"--weight=${input:weight}", // Weight
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 		// DEFAULT HSP PLANNER
@@ -72,6 +124,8 @@
 				"MAX",
 				"-w",
 				"1.2",
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 		// CUSTOM HSP PLANNER
@@ -93,6 +147,8 @@
 				"--log=${input:logLevel}", // Log Level
 				"--timeout=${input:timeout}", // Timeout
 				"--weight=${input:weight}", // Weight
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 		// DEFAULT GSP PLANNER
@@ -114,6 +170,8 @@
 				"FAST_FORWARD",
 				"-t",
 				"1000",
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 		// CUSTOM GSP PLANNER
@@ -136,6 +194,8 @@
 				"--timeout=${input:timeout}", // Timeout
 				"--weight=${input:weight}", // Weight
 				"--search-strategies=${input:strategy}", // Strategy
+				">",
+				"pddl4S/out.txt",
 			]
 		},
 	],
