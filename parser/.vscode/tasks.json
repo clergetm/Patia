@@ -1,6 +1,7 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// Complete Build
 		{
 			"label": "Complete build",
 			"detail": "Create a PDDL, Plan it and Translate it",
@@ -21,6 +22,7 @@
 				"clear": true
 			},
 		},
+		// Create Jar
 		{
 			"label": "Create Jar",
 			"group": "build",
@@ -39,6 +41,7 @@
 				"clear": true
 			}
 		},
+		// Create PDDL File
 		{
 			"label": "Create PDDL File",
 			"detail": "Parse the JSON File into PDDL Problem File",
@@ -62,10 +65,11 @@
 				"clear": true
 			}
 		},
+		// Planner a PDDL using default HSP planner
 		{
 			"hide": true,
 			"label": "Planner PDDL",
-			"detail": "Use HSP to found the plan of the PDDL Probleme",
+			"detail": "Use HSP to found the plan of the PDDL Problem",
 			"group": "none",
 			"type": "shell",
 			"command": "java",
@@ -83,6 +87,7 @@
 				"../sokoban/pddl4S/out.txt"
 			]
 		},
+		// Translate txt output of PDDL plan in list of movements
 		{
 			"label": "Translate txt output",
 			"group": "build",
