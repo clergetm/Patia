@@ -5,7 +5,16 @@
 		},
 		{
 			"path": "../parser"
+		},
+		{
+			"path": "../sokoban"
+		},
+		{
+			"path": "../PDDL4J"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive",
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
 }

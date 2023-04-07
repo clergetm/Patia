@@ -1,39 +1,5 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
-			"label": "Planner",
-			"group": "build",
-			"type": "shell",
-			"command": "java",
-			"args": [
-			"-Xms16g",
-			"-Xmx16g",
-			"-cp", 
-			"pddl4j-4.0.0.jar",										// pddl4j jar
-			"fr.uga.pddl4j.planners.statespace.${input:planner}",	// Planner
-			"pddl4S/domainSokoban.pddl",							// Domain
-			"pddl4S/${input:problem}.pddl"							// Problem
-			]
-		}
-	],
-	"inputs": [
-		{
-            "id": "planner",
-            "description": "planner name:",
-            "default": "FF",
-            "type": "pickString",
-			"options": [
-				"FF",
-				"GSP",
-				"HSP",
-			]
-        },
-		{
-            "id": "problem",
-            "description": "Problem file name:",
-            "default": "p01",
-            "type": "promptString"
-        },
     ]
 }

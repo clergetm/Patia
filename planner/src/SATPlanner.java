@@ -75,6 +75,24 @@ public class SATPlanner extends AbstractPlanner {
     public Problem instantiate(DefaultParsedProblem problem) {
         final Problem pb = new DefaultProblem(problem);
         pb.instantiate(); //here we instantiate our problem (we ground it).
+        
+        for (Action a : pb.getActions()) {
+            System.out.println("===============================================");
+            System.out.println("Arité: " + a.arity());
+            System.out.println("Parametre lenght: "+ a.getParameters().length);
+            System.out.println("Nom: " + a.getName());
+            BitVector cond = a.getPrecondition().getPositiveFluents();
+            for (Action b : pb.getActions()) {
+                for (ConditionalEffect ce : b.getConditionalEffects()) {
+                    if (ce.getCondition().getPositiveFluents().equals(cond)) {
+                        System.out.println("Super ça fonctionne enfin!");
+                        System.out.println(b.getName());
+                    }
+                }
+            }
+            System.out.println("Precondition" + a.getPrecondition().getNegativeFluents());
+            
+        }
         return pb;
     }
 

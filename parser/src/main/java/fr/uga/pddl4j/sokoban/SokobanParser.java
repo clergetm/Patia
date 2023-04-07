@@ -2,6 +2,7 @@ package fr.uga.pddl4j.sokoban;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.NoSuchElementException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import org.json.simple.parser.JSONParser;
 
 import fr.uga.pddl4j.sokoban.exceptions.FileFormatException;
+import fr.uga.pddl4j.sokoban.exceptions.MissingSokobanObjectException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,7 +35,7 @@ import org.json.simple.JSONObject;
  * </ol>
  * <br>
  * 
- * @author Hugo Alepoig
+ * @author Hugo Apeloig
  * @author Yazid Cheriti
  * @author Mathys Clerget
  * @version 1.0
@@ -45,6 +47,7 @@ public class SokobanParser {
     private String jsonFilePathString;
     private String pddlPathString;
 
+    /* configuration file data */
     private String mapName;
     private String mapModel;
 
@@ -53,9 +56,24 @@ public class SokobanParser {
     private List<String> goal;
     private List<String> boxes;
     private String guardPosition;
+    private int boxNumber = 1;
 
     /* Read & Write */
     private FileWriter writer;
+    static final String PDDL_FILE_NAME = "out.pddl";
+
+    /* Sokoban Characters */
+    static final char FLOOR = ' ';
+    static final char GUARD = '@';
+    static final char GUARD_ON_STORAGE = '+';
+    static final char BOX = '$';
+    static final char BOX_ON_STORAGE = '*';
+    static final char DESTINATION = '.';
+    static final char WALL = '#';
+    static final char PREFIX_FLOOR = 'f';
+    static final char PREFIX_DESTINATION = 'f';
+    static final char PREFIX_BOX = 'b';
+    static final char PREFIX_GUARD = 'g';
 
     /**
      * Constructor of JsonToPDDL.
@@ -67,7 +85,8 @@ public class SokobanParser {
      */
     public SokobanParser(String jsonFilePath, String pddlPath) {
         this.jsonFilePathString = jsonFilePath;
-        this.pddlPathString = pddlPath + "/out.pddl";
+        this.pddlPathString = pddlPath + File.separator + PDDL_FILE_NAME;
+        guardPosition = "";
     }
 
     /**
@@ -103,12 +122,12 @@ public class SokobanParser {
     private boolean initialize(String jsonFilePath, String pddlFilePath) {
         File pddlFile;
         File jsonFile;
-
+        final String format = ".json";
         boolean initialized = false;
         try {
             /* Check JsonFile */
             jsonFile = new File(jsonFilePath);
-            if (!jsonFile.getName().endsWith(".json")) {
+            if (!jsonFile.getName().endsWith(format)) {
                 throw new FileFormatException("Wrong Format");
             }
 
@@ -122,11 +141,11 @@ public class SokobanParser {
             this.boxes = new ArrayList<>();
 
             /* Get json data */
-            mapName = jsonFile.getName();
+            mapName = jsonFile.getName().replace(format, "");
             mapModel = json.get("testIn").toString();
 
             /* Set writer of PDDL problem */
-            this.writer = new FileWriter(pddlFile, true);
+            this.writer = new FileWriter(pddlFile, false);
 
             initialized = true;
         } catch (Exception e) {
@@ -152,83 +171,70 @@ public class SokobanParser {
     /**
      * Write the object part of the PDDL Problem.
      * 
-     * @throws IOException append exception.
+     * @throws IOException                   append exception.
+     * @throws MissingSokobanObjectException Something is wrong about the Sokoban
+     *                                       problem, missing or unknown characters.
      * @author YazidC
      */
-    public void createObjects() throws IOException {
-
-        ArrayList<String> map = new ArrayList<>(Arrays.asList(mapModel.split("\n")));
-
-        boolean betweenWalls = true;
-        int row = 1;
+    public void createObjects() throws IOException, MissingSokobanObjectException {
+        // Start with (1,1)
+        int row = 1; 
         int cell = 1;
-        int boxNumber = 1;
 
-        final String strFloor = " - floor\n";
-        final String strDest = " - destination\n";
-        final String strBox = " - box\n";
-        final String cfloor = "f";
-        char[] arrayMap = new char[mapModel.length()];
-        mapModel.getChars(0, mapModel.length(), arrayMap, 0);
-        for (int i = 0; i < map.size(); i++) {
-            row++;
-            cell = 1;
-            for (int j = 0; j < map.get(i).length(); j++) {
-
-                if (betweenWalls) {
-                    switch (map.get(i).charAt(j)) {
-                        case ' ':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
-                            cell++;
+        for (String line : mapModel.split("\n")) {
+            boolean betweenWalls = false;
+            for (char c : line.toCharArray()) {
+                // We won't start writing the plan for this line until we've read the first wall character, to avoid writing unnecessary floors.
+                if (c == WALL && !betweenWalls)
+                    betweenWalls = true;
+                else if (betweenWalls) {
+                    switch (c) {
+                        case WALL:
                             break;
-                        case '.':
-                            writer.append(cfloor + row + cell + strDest);
-                            floorPlan.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            cell++;
+                        case FLOOR:
+                            addFloor(row, cell);
                             break;
-                        case '@':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
-                            guardPosition = cfloor + row + cell;
-                            cell++;
+                        case DESTINATION:
+                            addDestination(row, cell);
                             break;
-                        case '+':
-                            writer.append(cfloor + row + cell + strDest);
-                            guardPosition = cfloor + row + cell;
-                            floorPlan.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            cell++;
+                        case GUARD:
+                            addFloor(row, cell);
+                            changeGuardPosition(row, cell);
                             break;
-                        case '$':
-                            writer.append(cfloor + row + cell + strFloor);
-                            floorPlan.add(cfloor + row + cell);
-                            writer.append("b" + boxNumber + strBox);
-                            boxes.add(cfloor + row + cell);
-                            boxNumber++;
-                            cell++;
+                        case GUARD_ON_STORAGE:
+                            addDestination(row, cell);
+                            changeGuardPosition(row, cell);
                             break;
-                        case '*':
-                            writer.append(cfloor + row + cell + strDest);
-                            floorPlan.add(cfloor + row + cell);
-                            writer.append("b" + boxNumber + strBox);
-                            boxes.add(cfloor + row + cell);
-                            goal.add(cfloor + row + cell + " ");
-                            boxNumber++;
-                            cell++;
+                        case BOX:
+                            addFloor(row, cell);
+                            addBox(row, cell);
                             break;
-                        case '#':
-                            cell++;
+                        case BOX_ON_STORAGE:
+                            addDestination(row, cell);
+                            addBox(row, cell);
                             break;
                         default:
-                            break;
+                            throw new MissingSokobanObjectException("Invalid character read.");
                     }
                 }
+                cell++; // Next cell
             }
+            row++; //  Next row
+            cell = 1;
 
         }
-        writer.append(")\n");
+        // Check missing objects
+        if (guardPosition.isEmpty()) {
+            throw new MissingSokobanObjectException("The guard position is missing.");
+        } else if (this.boxes.size() < this.goal.size()) {
+            throw new MissingSokobanObjectException("There are fewer boxes that destinations.");
+        } else if (this.boxes.isEmpty()) {
+            throw new MissingSokobanObjectException("You need at least one box.");
+        } else if (this.goal.isEmpty()) {
+            throw new MissingSokobanObjectException("You need at least one destination.");
+        } else {
+            writer.append(")\n");
+        }
     }
 
     /**
@@ -244,27 +250,25 @@ public class SokobanParser {
         for (int i = 0; i < floorPlan.size(); i++) {
             cell = floorPlan.get(i);
             if (boxes.contains(cell)) {
-                writer.append("(on b" + boxes.size() + " " + cell + ")\n(withbox " + cell + ")\n");
-                boxes.remove(cell);
+                writer.append("(on b" + --boxNumber + " " + cell + ")\n(withbox " + cell + ")\n");
             }
-            if (!boxes.contains(cell) && !goal.contains(cell) && !guardPosition.equals(cell))
+            if (!boxes.contains(cell) && !guardPosition.equals(cell))
                 writer.append("(empty " + cell + ")\n");
             if (guardPosition.equals(cell))
                 writer.append("(on g " + cell + ")\n");
-            int right = Integer.parseInt(cell.substring(1));
-            int down = right + 10;
+            int right = Integer.parseInt(cell.substring(2));
+            int down = Integer.parseInt(cell.substring(1, 2)) + 1;
             right++;
-            toCompare = "f" + right;
+            toCompare = cell.substring(0, 2) + right;
             if (floorPlan.contains(toCompare)) {
-                this.writeToPath(cell, toCompare, 'r');
-                this.writeToPath(toCompare, cell, 'l');
+                this.writePath(cell, toCompare, 'r');
+                this.writePath(toCompare, cell, 'l');
             }
-            toCompare = "f" + down;
+            toCompare = "f" + down + (right - 1);
             if (floorPlan.contains(toCompare)) {
-                this.writeToPath(cell, toCompare, 'd');
-                this.writeToPath(toCompare, cell, 'u');
+                this.writePath(cell, toCompare, 'd');
+                this.writePath(toCompare, cell, 'u');
             }
-
         }
         writer.append(")\n");
     }
@@ -319,8 +323,61 @@ public class SokobanParser {
      * @throws IOException append exception.
      * @author MathysC
      */
-    private void writeToPath(String from, String to, char direction) throws IOException {
+    private void writePath(String from, String to, char direction) throws IOException {
         this.writer.append("(path " + from + " " + to + " " + direction + ")\n");
+    }
+
+    /**
+     * Append in the write the floor. And add to floorplan list.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
+    private void addFloor(int row, int cell) throws IOException {
+        this.writer.append("" + PREFIX_FLOOR + row + cell + " - floor\n");
+        this.floorPlan.add("" + PREFIX_FLOOR + row + cell);
+    }
+
+    /**
+     * Append in the write the destination. And add to floorplan list. And add the
+     * goal.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
+    private void addDestination(int row, int cell) throws IOException {
+        this.writer.append("" + PREFIX_DESTINATION + row + cell + " - destination\n");
+        this.floorPlan.add("" + PREFIX_DESTINATION + row + cell);
+        this.goal.add("" + PREFIX_DESTINATION + row + cell);
+    }
+
+    /**
+     * Append in the write the box. And add to boxes list.
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
+     * @throws IOException append exception.
+     * @author MathysC
+     */
+    private void addBox(int row, int cell) throws IOException {
+        writer.append("" + PREFIX_BOX + boxNumber + " - box\n");
+        boxes.add("" + PREFIX_FLOOR + row + cell);
+        boxNumber++;
+    }
+
+    /**
+     * change the guard position
+     * 
+     * @param row  x axis.
+     * @param cell y axis.
+     * @author MathysC
+     */
+    private void changeGuardPosition(int row, int cell) {
+        this.guardPosition = "f" + row + cell;
     }
 
     /**
@@ -365,7 +422,7 @@ public class SokobanParser {
                     line = reader.nextLine();
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NoSuchElementException e) {
             e.printStackTrace();
         }
 
@@ -377,28 +434,28 @@ public class SokobanParser {
      * 4 Options are available:
      * <table>
      * <thead>
-     *   <tr>
-     *     <th>option</th>
-     *     <th>description</th>
-     *   </tr>
+     * <tr>
+     * <th>option</th>
+     * <th>description</th>
+     * </tr>
      * </thead>
      * <tbody>
-     *   <tr>
-     *     <td>-i</td>
-     *     <td>JSON Configuration file as input</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-o</td>
-     *     <td>Folder where to save the PDDL file</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-t</td>
-     *     <td>PDDL Plan file to translate in Sokoban Format</td>
-     *   </tr>
-     *   <tr>
-     *     <td>-h</td>
-     *     <td>Show Help</td>
-     *   </tr>
+     * <tr>
+     * <td>-i</td>
+     * <td>JSON Configuration file as input</td>
+     * </tr>
+     * <tr>
+     * <td>-o</td>
+     * <td>Folder where to save the PDDL file</td>
+     * </tr>
+     * <tr>
+     * <td>-t</td>
+     * <td>PDDL Plan file to translate in Sokoban Format</td>
+     * </tr>
+     * <tr>
+     * <td>-h</td>
+     * <td>Show Help</td>
+     * </tr>
      * </tbody>
      * </table>
      * 
@@ -416,22 +473,22 @@ public class SokobanParser {
         String helpOpt = "h";
         Options options = new Options();
         Option cInput = Option.builder(inputOpt).argName("json").hasArg().desc("JSON configuration file").build();
-        Option cOutput = Option.builder(outputOpt).argName("path").hasArg().desc("folder where to save PDDL file")
+        Option cOutput = Option.builder(outputOpt).argName("path").hasArg().desc("Folder where to save PDDL file")
                 .build();
-        Option tInput = Option.builder(translateOpt).argName("toTranslate").hasArg().desc("PDDL Plan to translate")
+        Option tInput = Option.builder(translateOpt).argName("txt").hasArg().desc("PDDL Plan to translate")
                 .build();
 
         options.addOption(cInput);
         options.addOption(cOutput);
         options.addOption(tInput);
-        options.addOption(helpOpt, "show Help");
+        options.addOption(helpOpt, "Show this help menu");
         CommandLineParser commandParser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 
         try {
 
             CommandLine cmd = commandParser.parse(options, args);
-            // Create options
+            // Create PDDL file
             if (cmd.hasOption(inputOpt)) {
                 // With output given
                 if (cmd.hasOption(outputOpt)) {

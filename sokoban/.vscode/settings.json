@@ -1,0 +1,18 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "maven.view": "flat",
+    "files.exclude": {
+        ".mvn/": true,
+        ".settings/": true,
+        "config/config.ini": true,
+        "config/generator.py": true,
+        "config/statement_en.html": true,
+        "config/stub.txt": true,
+        "target/" : true,
+        "test_files": true,
+        "pom.xml": false,
+        "pddl4j-4.0.0.jar": true,
+        ".classpath":true,
+        ".project":true,
+    }
+}
