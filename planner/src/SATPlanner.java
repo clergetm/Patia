@@ -1,5 +1,6 @@
 /* Copy-Past from the AStarP example */
 //Comments inf form // are mines 
+import fr.uga.pddl4j.heuristics.state.FastForward;
 import fr.uga.pddl4j.heuristics.state.StateHeuristic;
 import fr.uga.pddl4j.parser.DefaultParsedProblem;
 import fr.uga.pddl4j.parser.RequireKey;
@@ -12,10 +13,13 @@ import fr.uga.pddl4j.planners.ProblemNotSupportedException;
 import fr.uga.pddl4j.planners.SearchStrategy;
 import fr.uga.pddl4j.planners.statespace.search.StateSpaceSearch;
 import fr.uga.pddl4j.problem.DefaultProblem;
+import fr.uga.pddl4j.problem.Fluent;
 import fr.uga.pddl4j.problem.Problem;
 import fr.uga.pddl4j.problem.State;
 import fr.uga.pddl4j.problem.operator.Action;
 import fr.uga.pddl4j.problem.operator.ConditionalEffect;
+import fr.uga.pddl4j.util.BitVector;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -56,16 +60,6 @@ import org.sat4j.specs.TimeoutException;
     // optionListHeading = "%nOptions:%n")
 
 public class SATPlanner extends AbstractPlanner {
-
-    //TODO: //CHOOSE OUR ACTIONS REPRESENTATIONS
-    private Map<Integer,Object[]> propToVar; //Map the number of the SAT variables with the proposition (action or predicat at time I)
-
-    public SATPlanner(){
-        super();
-        propToVar = new HashMap<Integer,Object[]>();
-    }
-
-
     /**
      * The class logger.
      */
@@ -86,8 +80,9 @@ public class SATPlanner extends AbstractPlanner {
 
     //Take an instantiate problem
     //Gonna be use to get in a list: Initial states,  goals and  actions 
-    //Then map them to an int (each propositon gonna have a unique int)
-    private ArrayList<Integer> propToVar(final Problem problem, int numAction, ArrayList<Integer> previousVar){
+    //Then map them to an int (each propositon gonna have a unique int that is the index)
+    //numAction is the time step
+    private ArrayList<SATVariable> propToVar(ArrayList<Fluent> fluents, ArrayList<Action> actions, int numAction, ArrayList<SATVariable> previousVar){
         //We transform each proposition with its time associated to a unique integer
         //For example : Move(A,B)_0 = 1, Move(A,B)_1 = 12, etc
         //The unique integer start at 1 because SAT4J does'nt accept 0 as a variable
@@ -98,32 +93,78 @@ public class SATPlanner extends AbstractPlanner {
         //if we already have some variable we are implemented the same plans + 1 time step
         if(previousVar.size()>0){
             previousStep = numAction - 1;
-            varName = previousVar.get(previousVar.size()-1) + 1; 
+            varName = previousVar.size(); 
         } 
 
         //i the step number (temporal step)
         for(int i = previousStep; i<numAction; i++){
-            //We map our proposition to variables 
-            
-            TODO:
-            //ALL THE WORK OF CREATING VARIABLES IS GONNA BE HERE
 
-            propToVar.put(varName, null); // We map it
+            //Gonna be use to calculate precond and effects
+            //Relative index of fluents to our time step i
+            //If we add : fluents.size()+actions.size() we obtains relative index for i+1
+            int[] fVarName = new int[fluents.size()];
 
-            previousVar.add(varName);
-            varName++;
+
+            //We transform our propositions to SATVariables
+            for (int fI=0; fI<fluents.size();fI++) {
+                SATVariable p = new SATVariable(i, varName, true);
+                fVarName[fI] = varName;
+                varName++;
+                previousVar.add(p);
+            }
+
+
+            //We transform our actions to SATVariables
+            for (Action a : actions) {
+                SATVariable aVar = new SATVariable(i, varName, false);
+
+                //We add our precond to our actions (We only have positive preconditions)
+                BitVector pre = a.getPrecondition().getPositiveFluents();
+                for(int bit = 0; bit<pre.cardinality(); bit++){
+                    if(pre.get(bit)) aVar.addPrecond(fVarName[bit]);
+                }
+
+                //We add our posEffect :
+                BitVector posEff = a.getUnconditionalEffect().getPositiveFluents();
+                for(int bit = 0; bit<posEff.cardinality(); bit++){
+                    if(posEff.get(bit)) aVar.addPrecond(fVarName[bit]+ (fluents.size()+actions.size()) ); //We increase of one time step
+                }
+
+                //We add our negEffect :
+                BitVector negEff = a.getUnconditionalEffect().getNegativeFluents();
+                for(int bit = 0; bit<negEff.cardinality(); bit++){
+                    if(negEff.get(bit)) aVar.addPrecond(fVarName[bit]+ (fluents.size()+actions.size()) ); //We increase of one time step
+                }
+
+                varName++;
+                previousVar.add(aVar);
+            }
         }
+
         return previousVar;
     }
 
     //We create each clauses (we don't recreate the older clauses)
-    private ArrayList<int[]> createClauses(ArrayList<int[]> previousClauses, String someOtherArgs){
+    private ArrayList<int[]> createClauses(ArrayList<SATVariable> satVariables, ArrayList<int[]> previousClauses){
 
         TODO:
         //ALL THE WORK OF CREATING CLAUSES IS GONNA BE HERE
+
+        //WARNING : never gonna be empty
+        if(previousClauses.isEmpty()){
+            //We delete our previous goal and add the new clauses 
+            
+            
+        }
+
+        //We make clauses for each actions from undone yet too step goal -1
+        //We recreat the goal (Time ++)
+
+        //For Clauses undone we make them
         
         return previousClauses;
     }
+
     //Plein de pseudo code je reprends ça vendredi
     // /* As in tutorial "https://sat4j.gitbooks.io/case-studies/content/using-sat4j-as-a-java-library.html"
     //  * Writing a SAT problem and solve it with clauses
@@ -138,19 +179,45 @@ public class SATPlanner extends AbstractPlanner {
      */
     @Override
     public Plan solve(final Problem problem) {
+        ArrayList<Fluent> predicats; //Predicats (untimed : they are all predicats of the domain)
+        ArrayList<Action> actions; //Actions (untimed : they are all actions possible of the domain)
+        ArrayList<SATVariable> SATVar; //Map the number (index) of the SAT variables with the proposition (action or predicat at time I)
+        int numberVarPerTimeStep;
+
+        //We save our predicats and actions 
+        predicats = new ArrayList<>(problem.getFluents());
+        actions = new ArrayList<>(problem.getActions());
+        //For each time step we have exactly the same number of fluents and actions
+
         //We create the plan 
         Plan solvedPlan = new SequentialPlan();
 
         //We create the solver
         ISolver solver = SolverFactory.newDefault();
-
+        
         //With the graph plan we find the minimum number of actions 
-        int numAction = 0; //problem.
+        FastForward ff = new FastForward(problem);
+        State init = new State(problem.getInitialState());
+        int numAction = ff.estimate(init, problem.getGoal());
 
         boolean solved = false;
 
-        ArrayList<Integer> variables = new ArrayList<>();
+        SATVar = new ArrayList<>();
+        SATVar = propToVar(predicats, actions, numAction, SATVar);
+        
         ArrayList<int[]> clauses = new ArrayList<>();
+
+        //We build the initial state
+        BitVector iState = problem.getInitialState().getPositiveFluents();
+        for (SATVariable var : SATVar) {
+            if(var.getTimeStep()==0 && var.isFluent()){
+                //Fluents of the initial states
+                int[] tClause = new int[1];
+                if(iState.get(var.getName()-1)) tClause[0] = var.getName(); //We test with -1 because clauses go from 1 to n and bitVector : 0 to n-1
+                else tClause[0] = -var.getName();
+                clauses.add(tClause);
+            }
+        }
 
         //For the time lmit
         boolean timeExceed = false;
@@ -163,10 +230,10 @@ public class SATPlanner extends AbstractPlanner {
 
                 //Else we try to solve the problem :
                 
-                variables = propToVar(problem, numAction, variables);
-                clauses = createClauses(clauses, "otherArgs");
+                SATVar = propToVar(predicats, actions, numAction, SATVar);
+                clauses = createClauses(SATVar, clauses);
                 
-                int numVar = variables.size();
+                int numVar = SATVar.size();
                 // prepare the solver to accept numVar variables. MANDATORY for MAXSAT solving
                 solver.newVar(numVar);
                 
@@ -199,10 +266,10 @@ public class SATPlanner extends AbstractPlanner {
                         //SAT4J gives us the model : the list of variables that are true to solve the problem 
                         int[] model = problemSAT.findModel();
 
-                        TODO:// WHICH TYPE THE ACTIONS (WITH TIME) GONNA BE ?
-
+                        TODO:
                         //We transform our variables to temporal propositions
                         //List<Actions(with time related step)> tempActions
+                        //Translation with modulo : number of actions + fluents 
                         for(int v : model){
                             //We take back in our map the actions related to v and add them to the list
                         }
@@ -247,4 +314,6 @@ public class SATPlanner extends AbstractPlanner {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'isSupported'");
     }
+
+    
 }
