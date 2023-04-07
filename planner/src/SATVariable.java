@@ -40,4 +40,9 @@ public class SATVariable {
     }
 
     public boolean isFluent(){return fluent;}
+
+    //Used for contains()
+    public boolean equals(SATVariable var2){
+        return super.equals(var2) || this.name==var2.name;
+    }
 }

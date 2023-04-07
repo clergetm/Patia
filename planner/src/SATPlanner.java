@@ -114,7 +114,7 @@ public class SATPlanner extends AbstractPlanner {
             varName = previousVar.size(); 
         } 
 
-        //i the step number (temporal step)
+        //i the step number (temporal step) 
         for(int i = previousStep; i<numAction; i++){
 
             //Gonna be use to calculate precond and effects
@@ -128,11 +128,12 @@ public class SATPlanner extends AbstractPlanner {
                 SATVariable p = new SATVariable(i, varName, true);
                 fVarName[fI] = varName;
                 varName++;
-                previousVar.add(p);
+                if(!previousVar.contains(p)) //We add the propositions only they are not already in it
+                    previousVar.add(p);
             }
 
 
-            //We transform our actions to SATVariables
+            //We transform our actions to SATVariables 
             for (Action a : actions) {
                 SATVariable aVar = new SATVariable(i, varName, false);
 
@@ -159,26 +160,75 @@ public class SATPlanner extends AbstractPlanner {
             }
         }
 
+        //Then we had our fluents for the final time step
+        for (int fI=0; fI<fluents.size();fI++) {
+            SATVariable p = new SATVariable(numAction, varName, true);
+            varName++;
+            previousVar.add(p);
+        }
+
         return previousVar;
     }
 
     //We create each clauses (we don't recreate the older clauses)
-    private ArrayList<int[]> createClauses(ArrayList<SATVariable> satVariables, ArrayList<int[]> previousClauses){
+    //NEED TO BURN AND REBUILD THIS METHOD
+    //WE CREATE EACH TRANSITION CLAUSES ONLY FOR TIME STEP : prev TO TIMESTEPMAX
+    //CHECK SATPLANNER to transform pre and post in clauses
+    private ArrayList<int[]> createTransitionClauses(ArrayList<SATVariable> satVariables, ArrayList<int[]> previousClauses, int lastStep, int numberVarPerTimeStep){
 
         TODO:
         //ALL THE WORK OF CREATING CLAUSES IS GONNA BE HERE
+        //We make clauses for each actions from undone yet too step goal -1
+        //For Clauses undone we make them
 
-        //WARNING : never gonna be empty
+        //Initial and goal states have already been done
+
+        //If its the first time, we create clauses from Time 0 to Time n-1
         if(previousClauses.isEmpty()){
-            //We delete our previous goal and add the new clauses 
-            
+            for(int timeStep=0; timeStep<lastStep-1; timeStep++){
+
+                //For each time step
+                //We first create the action implication
+                for (SATVariable a : satVariables) {
+                    if(a.getTimeStep()==timeStep && !a.isFluent()){
+                        //a is an action at time i
+                        //a -> pre(a) and eff+(a) and eff-(a)
+                        //Transformed to :
+                        //AND( (not(a)ORpre(a)) (not(a)OReff+(a)) (not(a)OReff-(a)) )
+
+
+                    }
+                }
+
+                //Then we handle state changes : if f at i and not(f) at i+1 means action with neg effect occurs
+                //                               and not(f) at i and f at i+1 means action with pos effect occurs
+                for(SATVariable f : satVariables){
+                    //Need to check that f is a fluent
+                    //f is f at time i
+                    for(SATVariable fNext : satVariables) if (fNext.getName()==f.getName()+numberVarPerTimeStep){
+                        // -f and fNext -> OR(ai) where fNext in eff+(ai)
+                        // f and -fNext -> OR(ai) where fNext in eff-(ai)
+                        //Transformed to respectively :
+                        // f or -fNext OR (ai) eff+
+                        // -f or fNext OR (ai) eff-
+                    }
+                }
+
+                //We handle action restriction : only one action can occur at time i
+                for (SATVariable a : satVariables) {
+                    //Each action at time i impli no other action at time i
+                    for (SATVariable aSameTime : satVariables) {
+                        if(a.getTimeStep()==aSameTime.getTimeStep()){
+                            // not(a) or not(aSameTime)
+                            //Watch out for double
+                        }
+                    }
+                }
+            }
             
         }
 
-        //We make clauses for each actions from undone yet too step goal -1
-        //We recreat the goal (Time ++)
-
-        //For Clauses undone we make them
+        //We create clauses for time n-1 to time n (where time n is goal's time)
         
         return previousClauses;
     }
@@ -205,7 +255,9 @@ public class SATPlanner extends AbstractPlanner {
         //We save our predicats and actions 
         predicats = new ArrayList<>(problem.getFluents());
         actions = new ArrayList<>(problem.getActions());
+
         //For each time step we have exactly the same number of fluents and actions
+        numberVarPerTimeStep=predicats.size()+actions.size();
 
         //We create the plan 
         Plan solvedPlan = new SequentialPlan();
@@ -223,9 +275,11 @@ public class SATPlanner extends AbstractPlanner {
         SATVar = new ArrayList<>();
         SATVar = propToVar(predicats, actions, numAction, SATVar);
         
-        ArrayList<int[]> clauses = new ArrayList<>();
+        ArrayList<int[]> initClauses = new ArrayList<>();
+        ArrayList<int[]> goalClauses = new ArrayList<>();
+        ArrayList<int[]> transitionClauses = new ArrayList<>();
 
-        //We build the initial state
+        //We build the initial state only once
         BitVector iState = problem.getInitialState().getPositiveFluents();
         for (SATVariable var : SATVar) {
             if(var.getTimeStep()==0 && var.isFluent()){
@@ -233,9 +287,12 @@ public class SATPlanner extends AbstractPlanner {
                 int[] tClause = new int[1];
                 if(iState.get(var.getName()-1)) tClause[0] = var.getName(); //We test with -1 because clauses go from 1 to n and bitVector : 0 to n-1
                 else tClause[0] = -var.getName();
-                clauses.add(tClause);
+                initClauses.add(tClause);
             }
         }
+
+        //For the goal state :
+        BitVector gState = problem.getGoal().getPositiveFluents();
 
         //For the time lmit
         boolean timeExceed = false;
@@ -248,21 +305,38 @@ public class SATPlanner extends AbstractPlanner {
 
                 //Else we try to solve the problem :
                 
+                //We build the SATvariables needed
                 SATVar = propToVar(predicats, actions, numAction, SATVar);
-                clauses = createClauses(SATVar, clauses);
+
+                //We build the corresponding transitionClauses
+                transitionClauses = createTransitionClauses(SATVar, transitionClauses, numAction, numberVarPerTimeStep);
+
+                //We clear and rebuild the goal 
+                goalClauses.clear();
+                for (SATVariable var : SATVar) {
+                    if(var.getTimeStep()==numAction && var.isFluent()){
+                        //Fluents of the goal states (if everythings work, there is only fluents with this timeStep)
+                        int[] tClause = new int[1];
+                        if(gState.get((var.getName()-1)%(numberVarPerTimeStep))) tClause[0] = var.getName(); //We test with -1 because clauses go from 1 to n and bitVector : 0 to n-1
+                        //We only add positives fluents because STRIPS doesn't accept not in Goal
+                        goalClauses.add(tClause);
+                    }
+                }
                 
                 int numVar = SATVar.size();
                 // prepare the solver to accept numVar variables. MANDATORY for MAXSAT solving
                 solver.newVar(numVar);
                 
-                int numClause = clauses.size();
+                int numClause = initClauses.size() + transitionClauses.size() + goalClauses.size();
                 // prepare the solver to accept numClause clauses. MANDATORY for MAXSAT solving
                 solver.setExpectedNumberOfClauses(numClause);
 
                 // Feed the solver using Dimacs format, using arrays of int
                 // (best option to avoid dependencies on SAT4J IVecInt)
-                for (int i=0;i<numClause;i++) {
-                    int [] clause = clauses.get(i); // get the clause from clauses
+                
+                //We add our initialClauses
+                for (int i=0;i<initClauses.size();i++) {
+                    int [] clause = initClauses.get(i); // get the clause from clauses
                     // the clause should not contain a 0, only integer (positive or negative)
                     // with absolute values less or equal to MAXVAR
                     // e.g. int [] clause = {1, -3, 7}; is fine
@@ -273,6 +347,35 @@ public class SATPlanner extends AbstractPlanner {
                         e.printStackTrace();
                     } 
                 }
+
+                //We add our transitionClauses
+                for (int i=0;i<transitionClauses.size();i++) {
+                    int [] clause = transitionClauses.get(i); // get the clause from clauses
+                    // the clause should not contain a 0, only integer (positive or negative)
+                    // with absolute values less or equal to MAXVAR
+                    // e.g. int [] clause = {1, -3, 7}; is fine
+                    // while int [] clause = {1, -3, 7, 0}; is not fine 
+                    try {
+                        solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
+                    } catch (ContradictionException e) {
+                        e.printStackTrace();
+                    } 
+                }
+
+                //We add our goalClauses
+                for (int i=0;i<goalClauses.size();i++) {
+                    int [] clause = goalClauses.get(i); // get the clause from clauses
+                    // the clause should not contain a 0, only integer (positive or negative)
+                    // with absolute values less or equal to MAXVAR
+                    // e.g. int [] clause = {1, -3, 7}; is fine
+                    // while int [] clause = {1, -3, 7, 0}; is not fine 
+                    try {
+                        solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
+                    } catch (ContradictionException e) {
+                        e.printStackTrace();
+                    } 
+                }
+                
 
                 // we are done. Working now on the IProblem interface
                 IProblem problemSAT = solver;
