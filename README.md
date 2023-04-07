@@ -13,6 +13,11 @@
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
+This project is created by :
+ 1. Hugo Apeloig:    [profile](https://github.com/hugoapeloig)
+ 2. Yazid Cheriti:   [profile](https://github.com/maleusa)
+ 3. Mathys Clerget:  [profile](https://github.com/mathysc)
+ 
 This project is separated in four parts:
  1. [**PDDL4J**][pddl-md] : The *PDDL4J* exercices, domain and problem.
  2. [**parser**][parser-md] : The Java *Parser* that create a *PDDL* problem file from a *JSON* configuration file.
