@@ -387,7 +387,7 @@ public class SATPlanner extends AbstractPlanner {
                         //SAT4J gives us the model : the list of variables that are true to solve the problem 
                         int[] model = problemSAT.findModel();
 
-                        TODO:
+                        TODO: //creating back the plan
                         //We transform our variables to temporal propositions
                         //List<Actions(with time related step)> tempActions
                         //Translation with modulo : number of actions + fluents 
