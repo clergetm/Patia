@@ -45,4 +45,10 @@ public class SATVariable {
     public boolean equals(SATVariable var2){
         return super.equals(var2) || this.name==var2.name;
     }
+
+    //Geters for precond and effects
+
+    public ArrayList<Integer> getPrecond(){return precond;}
+    public ArrayList<Integer> getPosEffect(){return effectPlus;}
+    public ArrayList<Integer> getNegEffect(){return effectMinus;}
 }

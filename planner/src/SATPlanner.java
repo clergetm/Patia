@@ -175,65 +175,118 @@ public class SATPlanner extends AbstractPlanner {
     //WE CREATE EACH TRANSITION CLAUSES ONLY FOR TIME STEP : prev TO TIMESTEPMAX
     //CHECK SATPLANNER to transform pre and post in clauses
     private ArrayList<int[]> createTransitionClauses(ArrayList<SATVariable> satVariables, ArrayList<int[]> previousClauses, int lastStep, int numberVarPerTimeStep){
-
-        TODO:
-        //ALL THE WORK OF CREATING CLAUSES IS GONNA BE HERE
         //We make clauses for each actions from undone yet too step goal -1
-        //For Clauses undone we make them
+        //For clauses we have : and,or for one particular clause and AND,OR for each clause at least one list at the left or right of it
 
         //Initial and goal states have already been done
 
-        //If its the first time, we create clauses from Time 0 to Time n-1
+        int time = lastStep-1;
+        //If its the first time, we create clauses from Time 0 to Time n (where time n is goal's time)
         if(previousClauses.isEmpty()){
-            for(int timeStep=0; timeStep<lastStep-1; timeStep++){
-
-                //For each time step
-                //We first create the action implication
-                for (SATVariable a : satVariables) {
-                    if(a.getTimeStep()==timeStep && !a.isFluent()){
-                        //a is an action at time i
-                        //a -> pre(a) and eff+(a) and eff-(a)
-                        //Transformed to :
-                        //AND( (not(a)ORpre(a)) (not(a)OReff+(a)) (not(a)OReff-(a)) )
-
-
-                    }
-                }
-
-                //Then we handle state changes : if f at i and not(f) at i+1 means action with neg effect occurs
-                //                               and not(f) at i and f at i+1 means action with pos effect occurs
-                for(SATVariable f : satVariables){
-                    //Need to check that f is a fluent
-                    //f is f at time i
-                    for(SATVariable fNext : satVariables) if (fNext.getName()==f.getName()+numberVarPerTimeStep){
-                        // -f and fNext -> OR(ai) where fNext in eff+(ai)
-                        // f and -fNext -> OR(ai) where fNext in eff-(ai)
-                        //Transformed to respectively :
-                        // f or -fNext OR (ai) eff+
-                        // -f or fNext OR (ai) eff-
-                    }
-                }
-
-                //We handle action restriction : only one action can occur at time i
-                for (SATVariable a : satVariables) {
-                    //Each action at time i impli no other action at time i
-                    for (SATVariable aSameTime : satVariables) {
-                        if(a.getTimeStep()==aSameTime.getTimeStep()){
-                            // not(a) or not(aSameTime)
-                            //Watch out for double
-                        }
-                    }
-                }
-            }
-            
+            time=0;
         }
 
-        //We create clauses for time n-1 to time n (where time n is goal's time)
+
+        //Action implication and constraints are only for time i ~ n-1 and state changes if for i ~ n (thanks to fNext)
+        for(int timeStep=time; timeStep<lastStep; timeStep++){
+
+            //For each time step
+            //We first create the action implication
+            for (SATVariable a : satVariables) {
+                if(a.getTimeStep()==timeStep && !a.isFluent()){
+                    //a is an action at time i
+                    //a -> pre(a) and eff+(a) and eff-(a)
+                    //Transformed to :
+                    //AND( (not(a) OR pre(a)) (not(a) OR eff+(a)) (not(a) OR eff-(a)) )
+
+                    for (int pre : a.getPrecond()) {
+                        int[] clausePrecond = {-a.getName(),pre};
+                        previousClauses.add(clausePrecond);
+                    }
+
+                    for (int posEff : a.getPosEffect()) {
+                        int[] clausePosEff = {-a.getName(),posEff};
+                        previousClauses.add(clausePosEff);
+                    }
+
+                    for (int negEff : a.getNegEffect()) {
+                        int[] clauseNegEff = {-a.getName(),negEff};
+                        previousClauses.add(clauseNegEff);
+                    }
+
+                }
+            }
+
+            //Then we handle state changes : if f at i and not(f) at i+1 means action with neg effect occurs
+            //                               and not(f) at i and f at i+1 means action with pos effect occurs
+            for(SATVariable f : satVariables){
+                if(f.getTimeStep()==timeStep && f.isFluent())
+                    for(SATVariable fNext : satVariables) 
+                        if (fNext.getName()==f.getName()+numberVarPerTimeStep){
+                            // -f and fNext -> OR(ai) where fNext in eff+(ai)
+                            // f and -fNext -> OR(ai) where fNext in eff-(ai)
+                            //Transformed to respectively :
+                            // f or -fNext OR (ai) eff+
+                            // -f or fNext OR (ai) eff-
+                            
+                            ArrayList<Integer> actionWithPosEff = new ArrayList<>();
+                            ArrayList<Integer> actionWithNegEff = new ArrayList<>();
+
+                            //For each action at time step i we check if fNext is in the eff+ or eff-
+                            //TODO : Optimization
+                            for (SATVariable a : satVariables) {
+                                if(a.getTimeStep()==timeStep && !a.isFluent())
+                                    for(int affectedF : a.getPosEffect())
+                                        if(affectedF == fNext.getName()){
+                                            actionWithPosEff.add(a.getName());
+                                            break; //We break from the first for (posEffect)
+                                        }
+                                    for(int affectedF : a.getNegEffect())
+                                        if(affectedF == fNext.getName()){
+                                            actionWithNegEff.add(a.getName());
+                                            break; //We break from the second for (negEffect)
+                                        }
+                            }
+
+                            //We create and add the two clauses (for each f and fNext)
+                            int[] clausePosEff = new int[actionWithPosEff.size()+2];
+                            int[] clauseNegEff = new int[actionWithNegEff.size()+2];
+
+                            clausePosEff[0] = f.getName();
+                            clausePosEff[1] = -fNext.getName();
+                            for(int index=0; index<actionWithPosEff.size(); index++) clausePosEff[index+2] = actionWithPosEff.get(index);
+
+                            clauseNegEff[0] = -f.getName();
+                            clauseNegEff[1] = fNext.getName();
+                            for(int index=0; index<actionWithNegEff.size(); index++) clauseNegEff[index+2] = actionWithNegEff.get(index);
+                            
+                            previousClauses.add(clausePosEff);
+                            previousClauses.add(clauseNegEff);
+                        }
+            }
+
+            //We handle action restriction : only one action can occur at time i
+
+            //The list for handle doubles (to minimize the number of clauses)
+            ArrayList<Integer> alreadyHandled = new ArrayList<>();
+            for (SATVariable a : satVariables) {
+                //Each action at time i impli no other action at time i
+                if(a.getTimeStep()==timeStep)
+                    for (SATVariable aSameTime : satVariables) {
+                        if(!alreadyHandled.contains(aSameTime.getName()) && a.getName()!=aSameTime.getName() && aSameTime.getTimeStep()==timeStep){
+                            // aSameTime is an action that is not a, not already handled and a 
+                            // not(a) or not(aSameTime)
+                            int[] clause = {-a.getName(),-aSameTime.getName()};
+                            previousClauses.add(clause);
+                        }
+                    }
+            }
+        }
+
         
         return previousClauses;
     }
 
-    //Plein de pseudo code je reprends ça vendredi
     // /* As in tutorial "https://sat4j.gitbooks.io/case-studies/content/using-sat4j-as-a-java-library.html"
     //  * Writing a SAT problem and solve it with clauses
     //  */
@@ -248,7 +301,7 @@ public class SATPlanner extends AbstractPlanner {
     @Override
     public Plan solve(final Problem problem) {
         ArrayList<Fluent> predicats; //Predicats (untimed : they are all predicats of the domain)
-        ArrayList<Action> actions; //Actions (untimed : they are all actions possible of the domain)
+        ArrayList<java.awt.Desktop.Action> actions; //Actions (untimed : they are all actions possible of the domain)
         ArrayList<SATVariable> SATVar; //Map the number (index) of the SAT variables with the proposition (action or predicat at time I)
         int numberVarPerTimeStep;
 
@@ -336,7 +389,7 @@ public class SATPlanner extends AbstractPlanner {
                 
                 //We add our initialClauses
                 for (int i=0;i<initClauses.size();i++) {
-                    int [] clause = initClauses.get(i); // get the clause from clauses
+                    int [] clause = initClauses.get(i); // get the clause from initClauses
                     // the clause should not contain a 0, only integer (positive or negative)
                     // with absolute values less or equal to MAXVAR
                     // e.g. int [] clause = {1, -3, 7}; is fine
@@ -350,11 +403,7 @@ public class SATPlanner extends AbstractPlanner {
 
                 //We add our transitionClauses
                 for (int i=0;i<transitionClauses.size();i++) {
-                    int [] clause = transitionClauses.get(i); // get the clause from clauses
-                    // the clause should not contain a 0, only integer (positive or negative)
-                    // with absolute values less or equal to MAXVAR
-                    // e.g. int [] clause = {1, -3, 7}; is fine
-                    // while int [] clause = {1, -3, 7, 0}; is not fine 
+                    int [] clause = transitionClauses.get(i); // get the clause from transitionClauses
                     try {
                         solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
                     } catch (ContradictionException e) {
@@ -364,11 +413,7 @@ public class SATPlanner extends AbstractPlanner {
 
                 //We add our goalClauses
                 for (int i=0;i<goalClauses.size();i++) {
-                    int [] clause = goalClauses.get(i); // get the clause from clauses
-                    // the clause should not contain a 0, only integer (positive or negative)
-                    // with absolute values less or equal to MAXVAR
-                    // e.g. int [] clause = {1, -3, 7}; is fine
-                    // while int [] clause = {1, -3, 7, 0}; is not fine 
+                    int [] clause = goalClauses.get(i); // get the clause from goalClauses
                     try {
                         solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
                     } catch (ContradictionException e) {
@@ -387,15 +432,28 @@ public class SATPlanner extends AbstractPlanner {
                         //SAT4J gives us the model : the list of variables that are true to solve the problem 
                         int[] model = problemSAT.findModel();
 
-                        TODO: //creating back the plan
-                        //We transform our variables to temporal propositions
-                        //List<Actions(with time related step)> tempActions
+                        //We create back the plan
                         //Translation with modulo : number of actions + fluents 
-                        for(int v : model){
-                            //We take back in our map the actions related to v and add them to the list
+                        for (SATVariable a : SATVar) {
+                            //We only take actions
+                            if(!a.isFluent()){
+                                for(int v : model){
+                                    //We compare with variables of the model7
+                                    if(a.getName()==v) {
+                                        //The action a occurs at time getTime 
+                                        int place = (a.getName()%numberVarPerTimeStep)-predicats.size(); //The modulo give the index between 0 and numberVar and
+                                                                                                         // the minus give the index on the vector (+1) 
+                                        place -= 1; //Because the list start at 0 and SATVar at 1
+
+                                        Action act = actions.get(place);
+
+                                        solvedPlan.add(a.getTimeStep(),act);
+                                    }
+                                }
+                            }
                         }
+
                         
-                        //We had each TemporalActions to our plan
 
                     } else {
                         //No plan can be found we increase the total number of actions of the plan
