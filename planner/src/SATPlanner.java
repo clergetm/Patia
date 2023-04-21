@@ -301,7 +301,7 @@ public class SATPlanner extends AbstractPlanner {
     @Override
     public Plan solve(final Problem problem) {
         ArrayList<Fluent> predicats; //Predicats (untimed : they are all predicats of the domain)
-        ArrayList<java.awt.Desktop.Action> actions; //Actions (untimed : they are all actions possible of the domain)
+        ArrayList<Action> actions; //Actions (untimed : they are all actions possible of the domain)
         ArrayList<SATVariable> SATVar; //Map the number (index) of the SAT variables with the proposition (action or predicat at time I)
         int numberVarPerTimeStep;
 
