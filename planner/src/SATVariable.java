@@ -51,4 +51,18 @@ public class SATVariable {
     public ArrayList<Integer> getPrecond(){return precond;}
     public ArrayList<Integer> getPosEffect(){return effectPlus;}
     public ArrayList<Integer> getNegEffect(){return effectMinus;}
+    public String toString(){
+        String r = ""+name;
+        r=r+"\n";
+        r = r+"Precond :";
+        for(int i : precond) r=r+i+",";
+        r=r+"\n";
+        r = r+"PosEffect :";
+        for(int i : effectPlus) r=r+i+",";
+        r=r+"\n";
+        r = r+"NegEffect :";
+        for(int i : effectMinus) r=r+i+",";
+        r=r+"\n";
+        return r;
+    }
 }
