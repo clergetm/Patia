@@ -121,30 +121,34 @@ public class SATPlanner extends AbstractPlanner {
 
                 // We add our precond to our actions (We only have positive preconditions)
                 BitVector pre = a.getPrecondition().getPositiveFluents();
-                for (int bit = 0; bit < pre.cardinality(); bit++) {
+                // System.out.println("preVector : "+pre);
+                // System.out.print("preVector : ");
+                for (int bit = 0; bit < pre.length(); bit++) {
+                    // System.out.print(pre.get(bit)+";");
+                    // System.out.println("");
                     if (pre.get(bit))
                         aVar.addPrecond(fVarName[bit]);
                 }
 
                 // We add our posEffect :
                 BitVector posEff = a.getUnconditionalEffect().getPositiveFluents();
-                for (int bit = 0; bit < posEff.cardinality(); bit++) {
+                for (int bit = 0; bit < posEff.length(); bit++) {
                     if (posEff.get(bit))
-                        aVar.addPrecond(fVarName[bit] + (fluents.size() + actions.size())); // We increase of one time
+                        aVar.addEffectPlus(fVarName[bit] + (fluents.size() + actions.size())); // We increase of one time
                                                                                             // step
                 }
 
                 // We add our negEffect :
                 BitVector negEff = a.getUnconditionalEffect().getNegativeFluents();
-                for (int bit = 0; bit < negEff.cardinality(); bit++) {
+                for (int bit = 0; bit < negEff.length(); bit++) {
                     if (negEff.get(bit))
-                        aVar.addPrecond(fVarName[bit] + (fluents.size() + actions.size())); // We increase of one time
+                        aVar.addEffectMinus(fVarName[bit] + (fluents.size() + actions.size())); // We increase of one time
                                                                                             // step
                 }
 
                 varName++;
                 previousVar.add(aVar);
-                
+                // System.out.println(aVar);
             }
         }
 
@@ -175,6 +179,7 @@ public class SATPlanner extends AbstractPlanner {
         // is goal's time)
         if (previousClauses.isEmpty()) {
             time = 0;
+            System.out.println("Empty");
         }
 
         // Action implication and constraints are only for time i ~ n-1 and state
@@ -198,12 +203,13 @@ public class SATPlanner extends AbstractPlanner {
 
                     for (int posEff : a.getPosEffect()) {
                         int[] clausePosEff = { -a.getName(), posEff };
-                        // System.out.println("Action precond : "+clausePosEff[0]+";"+clausePosEff[1]);
+                        // System.out.println("Action posEffect : "+clausePosEff[0]+";"+clausePosEff[1]);
                         previousClauses.add(clausePosEff);
                     }
 
                     for (int negEff : a.getNegEffect()) {
-                        int[] clauseNegEff = { -a.getName(), negEff };
+                        int[] clauseNegEff = { -a.getName(), -negEff };
+                        // System.out.println("Action negEffect : "+clauseNegEff[0]+";"+clauseNegEff[1]);
                         previousClauses.add(clauseNegEff);
                     }
 
@@ -229,17 +235,18 @@ public class SATPlanner extends AbstractPlanner {
                             // For each action at time step i we check if fNext is in the eff+ or eff-
                             // TODO : Optimization
                             for (SATVariable a : satVariables) {
-                                if (a.getTimeStep() == timeStep && !a.isFluent())
+                                if (a.getTimeStep() == timeStep && !a.isFluent()){
                                     for (int affectedF : a.getPosEffect())
                                         if (affectedF == fNext.getName()) {
                                             actionWithPosEff.add(a.getName());
                                             break; // We break from the first for (posEffect)
                                         }
-                                for (int affectedF : a.getNegEffect())
-                                    if (affectedF == fNext.getName()) {
-                                        actionWithNegEff.add(a.getName());
-                                        break; // We break from the second for (negEffect)
-                                    }
+                                    for (int affectedF : a.getNegEffect())
+                                        if (affectedF == fNext.getName()) {
+                                            actionWithNegEff.add(a.getName());
+                                            break; // We break from the second for (negEffect)
+                                        }
+                                }
                             }
 
                             // We create and add the two clauses (for each f and fNext)
@@ -257,7 +264,13 @@ public class SATPlanner extends AbstractPlanner {
                                 clauseNegEff[index + 2] = actionWithNegEff.get(index);
 
                             previousClauses.add(clausePosEff);
+                            // System.out.print("ClausePosEff : ");
+                            // for(int i : clausePosEff) System.out.print(i+";");
+                            // System.out.println("");
                             previousClauses.add(clauseNegEff);
+                            // System.out.print("ClauseNegEff : ");
+                            // for(int i : clauseNegEff) System.out.print(i+";");
+                            // System.out.println("");
                         }
             }
 
