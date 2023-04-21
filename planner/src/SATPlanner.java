@@ -74,25 +74,7 @@ public class SATPlanner extends AbstractPlanner {
     @Override
     public Problem instantiate(DefaultParsedProblem problem) {
         final Problem pb = new DefaultProblem(problem);
-        pb.instantiate(); //here we instantiate our problem (we ground it).
-        
-        for (Action a : pb.getActions()) {
-            System.out.println("===============================================");
-            System.out.println("Arité: " + a.arity());
-            System.out.println("Parametre lenght: "+ a.getParameters().length);
-            System.out.println("Nom: " + a.getName());
-            BitVector cond = a.getPrecondition().getPositiveFluents();
-            for (Action b : pb.getActions()) {
-                for (ConditionalEffect ce : b.getConditionalEffects()) {
-                    if (ce.getCondition().getPositiveFluents().equals(cond)) {
-                        System.out.println("Super ça fonctionne enfin!");
-                        System.out.println(b.getName());
-                    }
-                }
-            }
-            System.out.println("Precondition" + a.getPrecondition().getNegativeFluents());
-            
-        }
+        pb.instantiate(); //here we instantiate our problem (we ground it). 
         return pb;
     }
 
@@ -394,31 +376,50 @@ public class SATPlanner extends AbstractPlanner {
                     // with absolute values less or equal to MAXVAR
                     // e.g. int [] clause = {1, -3, 7}; is fine
                     // while int [] clause = {1, -3, 7, 0}; is not fine 
-                    try {
-                        solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
-                    } catch (ContradictionException e) {
-                        e.printStackTrace();
-                    } 
+                    for (int clause2 : clause) {
+                        if (clause2 == 0) {
+                            System.out.print("initclause: ");
+                            System.out.println(clause2);
+                        }
+                    }
+                    // try {
+                    //     solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
+                    // } catch (ContradictionException e) {
+                    //     e.printStackTrace();
+                    // } 
                 }
 
                 //We add our transitionClauses
                 for (int i=0;i<transitionClauses.size();i++) {
-                    int [] clause = transitionClauses.get(i); // get the clause from transitionClauses
-                    try {
-                        solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
-                    } catch (ContradictionException e) {
-                        e.printStackTrace();
-                    } 
+                    int[] clause = transitionClauses.get(i); // get the clause from transitionClauses
+                    for (int clause2 : clause) {
+                        if (clause2 == 0) {
+                            System.out.print("transitionClause: ");
+                            System.out.println(clause2);
+                        }
+                    }
+                    // try {
+                    //     solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
+                    // } catch (ContradictionException e) {
+                    //     e.printStackTrace();
+                    // } 
                 }
 
                 //We add our goalClauses
                 for (int i=0;i<goalClauses.size();i++) {
-                    int [] clause = goalClauses.get(i); // get the clause from goalClauses
-                    try {
-                        solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
-                    } catch (ContradictionException e) {
-                        e.printStackTrace();
-                    } 
+                    int[] clause = goalClauses.get(i); // get the clause from goalClauses
+                    for (int clause2 : clause) {
+                        if (clause2 == 0) {
+                            System.out.print("goal: ");
+                            System.out.print(clause2 + "; num action : ");
+                            System.out.println(numAction);
+                        }
+                    }
+                    // try {
+                    //     solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
+                    // } catch (ContradictionException e) {
+                    //     e.printStackTrace();
+                    // } 
                 }
                 
 
