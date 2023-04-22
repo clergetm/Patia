@@ -182,6 +182,8 @@ public class SATPlanner extends AbstractPlanner {
             System.out.println("Empty");
         }
 
+        System.out.println("======================");
+        System.out.println("Transition clauses :");
         // Action implication and constraints are only for time i ~ n-1 and state
         // changes if for i ~ n (thanks to fNext)
         for (int timeStep = time; timeStep < lastStep; timeStep++) {
@@ -197,19 +199,19 @@ public class SATPlanner extends AbstractPlanner {
 
                     for (int pre : a.getPrecond()) {
                         int[] clausePrecond = { -a.getName(), pre };
-                        // System.out.println("Action precond : "+clausePrecond[0]+";"+clausePrecond[1]);
+                        System.out.println("Action precond : "+clausePrecond[0]+";"+clausePrecond[1]);
                         previousClauses.add(clausePrecond);
                     }
 
                     for (int posEff : a.getPosEffect()) {
                         int[] clausePosEff = { -a.getName(), posEff };
-                        // System.out.println("Action posEffect : "+clausePosEff[0]+";"+clausePosEff[1]);
+                        System.out.println("Action posEffect : "+clausePosEff[0]+";"+clausePosEff[1]);
                         previousClauses.add(clausePosEff);
                     }
 
                     for (int negEff : a.getNegEffect()) {
                         int[] clauseNegEff = { -a.getName(), -negEff };
-                        // System.out.println("Action negEffect : "+clauseNegEff[0]+";"+clauseNegEff[1]);
+                        System.out.println("Action negEffect : "+clauseNegEff[0]+";"+clauseNegEff[1]);
                         previousClauses.add(clauseNegEff);
                     }
 
@@ -264,13 +266,13 @@ public class SATPlanner extends AbstractPlanner {
                                 clauseNegEff[index + 2] = actionWithNegEff.get(index);
 
                             previousClauses.add(clausePosEff);
-                            // System.out.print("ClausePosEff : ");
-                            // for(int i : clausePosEff) System.out.print(i+";");
-                            // System.out.println("");
+                            System.out.print("ClausePosEff : ");
+                            for(int i : clausePosEff) System.out.print(i+";");
+                            System.out.println("");
                             previousClauses.add(clauseNegEff);
-                            // System.out.print("ClauseNegEff : ");
-                            // for(int i : clauseNegEff) System.out.print(i+";");
-                            // System.out.println("");
+                            System.out.print("ClauseNegEff : ");
+                            for(int i : clauseNegEff) System.out.print(i+";");
+                            System.out.println("");
                         }
             }
 
@@ -287,7 +289,7 @@ public class SATPlanner extends AbstractPlanner {
                             // aSameTime is an action that is not a, not already handled and a
                             // not(a) or not(aSameTime)
                             int[] clause = { -a.getName(), -aSameTime.getName() };
-                            // System.out.println("Action restriction : "+clause[0]+";"+clause[1]);
+                            System.out.println("Action restriction : "+clause[0]+";"+clause[1]);
                             previousClauses.add(clause);
                         }
                     }
@@ -366,7 +368,7 @@ public class SATPlanner extends AbstractPlanner {
         boolean timeExceed = false;
 
         try {
-            while (!solved) {
+            while (!solved && numAction<5) {
                 // If time exceed and we still don't have a plan we stop and say plan not found
                 if (timeExceed)
                     throw new TimeoutException();
@@ -375,6 +377,10 @@ public class SATPlanner extends AbstractPlanner {
 
                 // We build the SATvariables needed
                 SATVar = propToVar(predicats, actions, numAction, SATVar);
+                System.err.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                System.out.println("SATVariables :");
+                for(SATVariable s : SATVar) System.out.print(s.getName()+";");
+                System.out.println("#################################");
 
                 // We build the corresponding transitionClauses
                 transitionClauses = createTransitionClauses(SATVar, transitionClauses, numAction, numberVarPerTimeStep);
@@ -413,7 +419,12 @@ public class SATPlanner extends AbstractPlanner {
 
                 // Feed the solver using Dimacs format, using arrays of int
                 // (best option to avoid dependencies on SAT4J IVecInt)
-
+                System.out.println("Init clauses :");
+                for (int[] clause : initClauses) {
+                    for(int i : clause)
+                        System.out.print(i+";");
+                    System.out.println("");
+                }
                 // We add our initialClauses
                 for (int i = 0; i < initClauses.size(); i++) {
                     int[] clause = initClauses.get(i); // get the clause from initClauses
@@ -421,12 +432,6 @@ public class SATPlanner extends AbstractPlanner {
                     // with absolute values less or equal to MAXVAR
                     // e.g. int [] clause = {1, -3, 7}; is fine
                     // while int [] clause = {1, -3, 7, 0}; is not fine
-                    for (int clause2 : clause) {
-                        if (clause2 == 0) {
-                            System.out.print("initclause: ");
-                            System.out.println(clause2);
-                        }
-                    }
                     try {
                         if(clause.length>0)
                             solver.addClause(new VecInt(clause)); // adapt Array to IVecInt
@@ -434,7 +439,7 @@ public class SATPlanner extends AbstractPlanner {
                         e.printStackTrace();
                     }
                 }
-
+                
                 // We add our transitionClauses
                 for (int i = 0; i < transitionClauses.size(); i++) {
                     int[] clause = transitionClauses.get(i); // get the clause from transitionClauses
@@ -451,7 +456,13 @@ public class SATPlanner extends AbstractPlanner {
                         e.printStackTrace();
                     }
                 }
-
+                System.out.println("======================");
+                System.out.println("Goal clauses :");
+                for (int[] clause : goalClauses) {
+                    for(int i : clause)
+                        System.out.print(i+";");
+                    System.out.println("");
+                }
                 // We add our goalClauses
                 for (int i = 0; i < goalClauses.size(); i++) {
                     int[] clause = goalClauses.get(i); // get the clause from goalClauses
@@ -536,6 +547,8 @@ public class SATPlanner extends AbstractPlanner {
             return null; // No plan was found in the restricted time
         }
 
+        if(!solved)
+            System.out.println("No plan found");
         // We find a plan without Time Exceed
         return solvedPlan;
     }

@@ -1,0 +1,28 @@
+7 fluents & 5 actions
+
+Init : 1; 3; 4; 7 	-2; -5; -6
+
+TS 1 : Action possible : 8;9	8->14^-13 	9->17^-15^-16
+Precond :				Effect+			Effect-
+8 : -8;1 				-8;14			-8;-13
+9 : -9;1  -9;3  -9;4	-9;17			-9;-15 -9;-16
+10: -10;2 -10;4 -10;6	-10;17			-10;-16 -10;-18
+11: -11;1 -11;5			-11;15 -11;16	-11;-17
+12: -12;2 -12;5			-12;16 -12;18	-12;-17
+Clause de Changement d'état :
+-8 -> 13^-14 -9->15 Donc : [8^14^-13^15^16^-17];[9^17^-15^-16^13^-14] et -18^19
+
+TS 2 : Action possible : SI 8: 0 SI 9: 20;23
+Precond :				Effect+			Effect-
+20: 13					26				-25
+21:	13^15^16			29				-27^-28
+22:	14^16^18			29				-28^-30
+23:	13^17				27^28			-29
+24:	14^17				28^30			-29
+Goal : 30;
+
+Lors d'une itération en plus à numTimeStepMin, la création des satVariables se fait fait mal :
+    Pas de préconditions/Pas d'effet et pas d'interdiction
+
+ATTTENTION : 31 créé en double !!!!
+Pas fini
