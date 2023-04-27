@@ -54,13 +54,13 @@
 	)
 	(:action stateonezero
 		:parameters (?h -head ?c - cell)
-		:precondition (and (at ?h ?c) (stateone ?h) (containsblank ?c)
+		:precondition (and (at ?h ?c) (stateone ?h) (containszero ?c)
 		)
 		:effect(and
 			(statehalt ?h)
 			(not(stateone ?h))
 			(containsone ?c)
-			(not(containsblank ?c))
+			(not(containszero ?c))
 		)
 	)
 	(:action stateoneone
@@ -68,7 +68,7 @@
 		:precondition (and
 			(at ?h ?c)
 			(stateone ?h)
-			(containsblank ?c)
+			(containsone ?c)
 			(totheleft ?c ?c2)
 		)
 		:effect(and
