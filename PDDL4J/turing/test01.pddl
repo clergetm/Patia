@@ -19,7 +19,6 @@
 
   (:goal
     (and
-
       (statehalt h1)
     )
   )
