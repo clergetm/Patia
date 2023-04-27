@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 public class SATVariable {
+    //Class representing our SATVariable for fluent and action
 
     private int timeStep;
     private int name;
@@ -51,6 +52,8 @@ public class SATVariable {
     public ArrayList<Integer> getPrecond(){return precond;}
     public ArrayList<Integer> getPosEffect(){return effectPlus;}
     public ArrayList<Integer> getNegEffect(){return effectMinus;}
+
+    @Override
     public String toString(){
         String r = ""+name;
         r=r+"\n";
