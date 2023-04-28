@@ -41,6 +41,8 @@ There is a *script* named `launch.sh` in this reposity that will automatically
  1. **Create** a *PDDL* file from a *JSON* configuration file
  2. **Plan** this *PDDL* problem using *PDDL4J* planner and write the output in **out.txt**.
  3. **Run** the server with this configuration file and the solution found in **out.txt**.
+ 
+ 
 When using this script please make sure to run it first with `launch.sh -c` to configure your environnement, you can also use `launch.sh -h` to display the multiple options of the bash script. 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
