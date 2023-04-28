@@ -14,6 +14,7 @@
         (connected n1 n2)
         (connected n2 n1)
         (oneConnection n1)
+        (notNConnection n1)
         ;n2
         (connected n2 n4)
         (connected n4 n2)
@@ -25,6 +26,8 @@
         (connected n4 n3)
         (twoConnection n3)
         (twoConnection n4)
+        (notNConnection n3)
+        (notNConnection n4)
         
         ;notSame nodes (bylateral)
         (notSameN n1 n2)

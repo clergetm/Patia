@@ -13,7 +13,8 @@
         (connected ?n1 - node ?n2 - node)
         (oneConnection ?n1 - node)
         (twoConnection ?n1 - node)
-        (nConnection ?n1 -node)
+        (nConnection ?n1 - node)
+        (notNConnection ?n1 - node)
         (notSameP ?p1 - pursuer ?p2 - pursuer)
         (notSameN ?n1 - node ?n2 - node)
     )
@@ -74,6 +75,7 @@
         :precondition (and 
                 (on ?n1 ?p)
                 (connected ?n1 ?n2)
+                (notNConnection ?n1)
                 )
         :effect (and 
                 (not (on ?n1 ?p))
