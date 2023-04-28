@@ -19,12 +19,9 @@ This project is created by :
  3. Mathys Clerget:  [profile](https://github.com/mathysc)
  
 This project is separated in four parts:
- 1. [**PDDL4J**][pddl-md] : The *PDDL4J* exercices, domain and problem.
- 2. [**parser**][parser-md] : The Java *Parser* that create a *PDDL* problem file from a *JSON* configuration file.
- 3. [**planner**][planner-md]: The *SAT planner* using [SAT4J][sat-url].
- 4. [**sokoban**][sokoban-md]: The *sokoban* [fork][sokoban-fork] modified to be used with our **parser**.
+ 
 
-###How to run
+### How to run
 To launch the test plan of our satplanner simply launch the script bash `testplanSAT` that you can find in this folder.
 However you must have the repository of [**PDDL4J**][pddl4j] located in ../../pddl4J regarding this folder.
 ### Implementation du planner
@@ -32,12 +29,11 @@ The idea of the planner is the following, using the 'instantiate' method provide
 Our propositions are encoded in the form of actions for a time T. Indeed the action : move(a,b) at time 0 is different from move(a,b) at time 2. In this way the integer 1 and the integer 2 can represent the same action but at a different time T. Constraints will therefore be added to ensure that only one and only one action can be performed for each T=i. In this way, the result given by SAT4J will be a list of actions linked each for a different time T and we can transform it into a plan: Action a1 at T=0, Action a2 at T=1, etc.
 Once reconstructed, the plan is transformed back into a textual plan (from a1, a3, to : moove(a,b), place(c,d)), then displayed to the user of our planner.
 <p align="right">(<a href="#top">back to top</a>)</p>
-##Quick Navigation
-There is a *script* named `launch.sh` in this reposity used for automatically
- 1. **Create** a *PDDL* file from a *JSON* configuration file
- 2. **Plan** this *PDDL* problem using *PDDL4J* planner and write the output in **out.txt**.
- 3. **Run** the server with this configuration file and the solution found in **out.txt**.
- 
+## Quick Navigation
+1. [**PDDL4J**][pddl-md] : The *PDDL4J* exercices, domain and problem.
+ 2. [**parser**][parser-md] : The Java *Parser* that create a *PDDL* problem file from a *JSON* configuration file.
+ 3. [**planner**][planner-md]: The *SAT planner* using [SAT4J][sat-url].
+ 4. [**sokoban**][sokoban-md]: The *sokoban* [fork][sokoban-fork] modified to be used with our **parser**. 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
@@ -60,5 +56,3 @@ There is a *script* named `launch.sh` in this reposity used for automatically
 [planner-md]: https://github.com/MathysC/Patia/blob/main/planner/README.md
 [sokoban-md]: https://github.com/MathysC/Patia/blob/main/sokoban/README.md
 [pddl4j]:https://github.com/pellierd/pddl4j
-# Patia
-Exercises and Planner for PATIA course
