@@ -23,7 +23,7 @@ This project is created by :
 ### How to run
 To launch the test plan of our satplanner simply launch the script bash `testplanSAT` that you can find in this folder.
 However you must have the repository of [**PDDL4J**][pddl4j] located in ../../pddl4J regarding this folder.
-### Implementation du planner
+### Implementation
 The idea of the planner is the following, using the 'instantiate' method provided by PDDL4J, we get a grounded problem which allows us using methods like .getActions() to retrieve our different proposals. We then map each of the propositions to a unique integer. Then we give each of the clauses the form {1, 2, -3} which means for example that either the prepositions 1 or 2 are true or 3 is false. We then add our clauses to the SAT4J solver which then solves all the clauses and returns a list of propositions that must be true (a stable model). 
 Our propositions are encoded in the form of actions for a time T. Indeed the action : move(a,b) at time 0 is different from move(a,b) at time 2. In this way the integer 1 and the integer 2 can represent the same action but at a different time T. Constraints will therefore be added to ensure that only one and only one action can be performed for each T=i. In this way, the result given by SAT4J will be a list of actions linked each for a different time T and we can transform it into a plan: Action a1 at T=0, Action a2 at T=1, etc.
 Once reconstructed, the plan is transformed back into a textual plan (from a1, a3, to : moove(a,b), place(c,d)), then displayed to the user of our planner.
