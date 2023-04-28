@@ -43,7 +43,7 @@ There is a *script* named `launch.sh` in this reposity that will automatically
  3. **Run** the server with this configuration file and the solution found in **out.txt**.
  
  
-When using this script please make sure to run it first with `launch.sh -c` to configure your environnement, you can also use `launch.sh -h` to display the multiple options of the bash script. 
+...When using this script please make sure to run it first with `launch.sh -c` to configure your environnement, you can also use `launch.sh -h` to display the multiple options of the bash script.... 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## QUICK NAVIGATION
