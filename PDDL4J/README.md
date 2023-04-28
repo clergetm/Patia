@@ -27,7 +27,7 @@ This folder contains all our exercices, in each subfolder you can find:
   - [ ] Exercise 5: Pursuit-Evasion
   - [ ] Exercise 6: Hamiltonian cycle
   - [ ] Exercise 7: Turing Machine
-  - [ ] Exercise 8: SAT solver
+  - [x] Exercise 8: SAT solver
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
