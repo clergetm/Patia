@@ -2,37 +2,21 @@
 /* Copy-Past from the AStarP example */
 //Comments inf form // are mines 
 import fr.uga.pddl4j.heuristics.state.FastForward;
-import fr.uga.pddl4j.heuristics.state.StateHeuristic;
 import fr.uga.pddl4j.parser.DefaultParsedProblem;
-import fr.uga.pddl4j.parser.RequireKey;
 import fr.uga.pddl4j.plan.Plan;
 import fr.uga.pddl4j.plan.SequentialPlan;
 import fr.uga.pddl4j.planners.AbstractPlanner;
-import fr.uga.pddl4j.planners.Planner;
-import fr.uga.pddl4j.planners.PlannerConfiguration;
-import fr.uga.pddl4j.planners.ProblemNotSupportedException;
-import fr.uga.pddl4j.planners.SearchStrategy;
-import fr.uga.pddl4j.planners.statespace.search.StateSpaceSearch;
 import fr.uga.pddl4j.problem.DefaultProblem;
 import fr.uga.pddl4j.problem.Fluent;
 import fr.uga.pddl4j.problem.Problem;
 import fr.uga.pddl4j.problem.State;
 import fr.uga.pddl4j.problem.operator.Action;
-import fr.uga.pddl4j.problem.operator.ConditionalEffect;
 import fr.uga.pddl4j.util.BitVector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 //For the SATEncoding 
