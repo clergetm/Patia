@@ -1,5 +1,3 @@
-;Header and description
-
 (define (domain Pursuit2)
 
     (:requirements :strips :typing)
