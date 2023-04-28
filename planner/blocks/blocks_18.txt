@@ -1,0 +1,59 @@
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+
+parsing domain file "domain.pddl" done successfully
+parsing problem file "p018.pddl" done successfully
+# WARNING: Unable to get Instrumentation. Dynamic Attach failed. You may add this JAR as -javaagent manually, or supply -Djdk.attach.allowAttachSelf
+# WARNING: Unable to attach Serviceability Agent. You can try again with escalated privileges. Two options: a) use -Djol.tryWithSudo=true to try with sudo; b) echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+
+problem instantiation done successfully (180 actions, 109 fluents)
+
+Actions:17
+Actions:18
+Actions:19
+Actions:20
+Actions:21
+Actions:22
+Actions:23
+Actions:24
+Actions:25
+Actions:26
+
+found plan as follows:
+
+00: (unstack h a) [0]
+01: (  stack h f) [0]
+02: (unstack a d) [0]
+03: ( put-down a) [0]
+04: (unstack d e) [0]
+05: ( put-down d) [0]
+06: (unstack e c) [0]
+07: ( put-down e) [0]
+08: (unstack c i) [0]
+09: (  stack c a) [0]
+10: (unstack i b) [0]
+11: ( put-down i) [0]
+12: (unstack b g) [0]
+13: (  stack b c) [0]
+14: (  pick-up e) [0]
+15: (  stack e b) [0]
+16: (  pick-up i) [0]
+17: (  stack i e) [0]
+18: (  pick-up d) [0]
+19: (  stack d i) [0]
+20: (unstack h f) [0]
+21: (  stack h d) [0]
+22: (  pick-up g) [0]
+23: (  stack g h) [0]
+24: (  pick-up f) [0]
+25: (  stack f g) [0]
+
+time spent:       0.03 seconds parsing 
+                  0.09 seconds encoding 
+                  0.00 seconds searching
+                  0.12 seconds total time
+
+memory used:      0.70 MBytes for problem representation
+                  0.00 MBytes for searching
+                  0.70 MBytes total
+
+

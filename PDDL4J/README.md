@@ -25,7 +25,7 @@ This folder contains all our exercices, in each subfolder you can find:
   - [x] Exercise 4: Graph coloring
        - [x] CSP: constraint-satisfaction-problem
   - [X] Exercise 5: Pursuit-Evasion
-  - [ ] Exercise 6: Hamiltonian cycle
+  - [x] Exercise 6: Hamiltonian cycle
   - [X] Exercise 7: Turing Machine
   - [x] Exercise 8: SAT solver
 <p align="right">(<a href="#top">back to top</a>)</p>
